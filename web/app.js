@@ -672,7 +672,7 @@ const Sync = {
     else if (this.err) setStatus(n ? `Не отправлено: ${n}` : "Нет связи с сервером", "bad");
     else if (n) setStatus(`Ждёт отправки: ${n}`);
     else if (this.last) setStatus("Синхронизировано", "ok");
-    if (S.view === "account") renderAccount();
+    if (S.view === "account") updateAccountSync();
   },
 };
 window.addEventListener("online", () => Sync.run());
@@ -759,36 +759,90 @@ function startApp(who) {
 function onSignedOut() { renderAuth("Сессия закончилась. Войди снова."); showShell(false); }
 function sub(col, apply) { LocalDB.collection(col).onSnapshot(snap => { apply(snap); onData(); }); }
 
+function syncText() {
+  const n = Store.pending();
+  const st = Sync.busy ? "Идёт синхронизация…" : Sync.err ? "Последняя попытка не удалась" + (navigator.onLine ? "" : ": нет интернета") + "." : Sync.last ? "Последняя синхронизация: " + new Date(Sync.last).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "Ещё не было.";
+  return `${st} Ждут отправки: ${n}.`;
+}
+function updateAccountSync() { const el = $("#acc-sync"); if (el) el.textContent = syncText(); }
 function renderAccount() {
   const v = $("#view-account"); if (!v || v.hidden) return;
-  const n = Store.pending();
   v.innerHTML = `<div class="card"><h2>Аккаунт</h2>
     <p>${esc(Auth.email)}</p>
     <p class="small muted">Программа: <b>${esc(CFG.name)}</b></p>
     <div class="row">${Object.values(window.PROGRAMS).filter(p => p.who !== CFG.who).map(p => `<button type="button" class="btn" data-switch="${esc(p.who)}">Переключить на программу «${esc(p.name)}»</button>`).join("")}</div>
   </div>
   <div class="card"><h2>Синхронизация</h2>
-    <p class="small">${Sync.busy ? "Идёт синхронизация…" : Sync.err ? "Последняя попытка не удалась" + (navigator.onLine ? "" : ": нет интернета") + "." : Sync.last ? "Последняя синхронизация: " + new Date(Sync.last).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "Ещё не было."}</p>
-    <p class="small muted">Ждут отправки: ${n}. Всё, что ты вводишь, сначала сохраняется на устройстве, поэтому в зале можно работать без интернета.</p>
+    <p class="small" id="acc-sync">${esc(syncText())}</p>
+    <p class="small muted">Всё, что ты вводишь, сначала сохраняется на устройстве, поэтому в зале можно работать без интернета.</p>
     <div class="row"><button type="button" class="btn primary" id="s-now">Синхронизировать сейчас</button></div></div>
-  <div class="card"><h2>Резервная копия</h2>
-    <p class="small muted">Импорт добавляет записи из файла .json. Записи с той же датой и тренировкой заменяются.</p>
-    <div class="row"><label class="btn" for="s-file">Импортировать файл</label><input type="file" id="s-file" accept=".json,application/json" hidden><button type="button" class="btn" id="s-export">Экспорт в файл</button></div>
-    <p class="small muted" id="s-msg"></p></div>
-  <div class="card"><h2>Выход</h2><p class="small muted">Данные, которые ещё не отправлены, будут потеряны. Сейчас таких: ${n}.</p>
+  <div class="card"><h2>Импорт</h2>
+    <p class="small muted">Из файла .json или из скопированного текста. Записи с той же датой и тренировкой заменяются.</p>
+    <div class="row"><button type="button" class="btn" id="s-pick">Выбрать файл</button></div>
+    <div class="field"><label class="label" for="s-text">Или вставь текст сюда</label><textarea id="s-text" placeholder='{"app":"trainer", ...}'></textarea></div>
+    <div class="row"><button type="button" class="btn primary" id="s-import-text">Импортировать текст</button></div>
+    <p class="small" id="s-msg"></p></div>
+  <div class="card"><h2>Экспорт и отчёт</h2>
+    <p class="small muted">Отчёт — короткая сводка за 4 недели, чтобы вставить её в чат с Claude. Экспорт — все записи целиком.</p>
+    <div class="row"><button type="button" class="btn primary" id="s-report">Скопировать отчёт для Claude</button><button type="button" class="btn" id="s-export">Экспорт всех данных</button></div>
+    <textarea id="s-out-text" readonly hidden></textarea>
+    <p class="small" id="s-msg2"></p></div>
+  <div class="card"><h2>Выход</h2><p class="small muted">Данные, которые ещё не отправлены, будут потеряны. Сейчас таких: ${Store.pending()}.</p>
     <div class="row"><button type="button" class="btn danger" id="s-out">${S.delArm === "logout" ? "Точно выйти?" : "Выйти"}</button></div></div>`;
 }
-document.addEventListener("click", e => {
+function importText(text) {
+  const j = JSON.parse(text);
+  const rows = Array.isArray(j.rows) ? j.rows : [];
+  let n = 0;
+  rows.forEach(r => { if (r && r.col && r.id && r.data && ["sessions", "daily", "measures", "cardio"].includes(r.col)) { Store.write(r.col, String(r.id), r.data, false); n++; } });
+  return n;
+}
+async function copyOut(text, msgEl, okText) {
+  const ta = $("#s-out-text"); ta.value = text; ta.hidden = false;
+  try { await navigator.clipboard.writeText(text); msgEl.textContent = okText; }
+  catch (e) { ta.focus(); ta.select(); try { document.execCommand("copy"); msgEl.textContent = okText; } catch (e2) { msgEl.textContent = "Скопируй текст из поля ниже вручную."; } }
+}
+function buildReport() {
+  const from = addDays(today(), -28);
+  const L = [`Отчёт «Тренировки» · ${CFG.name} · ${dShort(from)}–${dShort(today())}`];
+  const rows = weekRows(5).reverse();
+  L.push("Недели (с понедельника): вес ср. / ккал / белок / шаги / тренировок / подходов / кардио мин / талия");
+  rows.forEach(r => L.push(`${dShort(r.ws)}: ${fmt(r.w, 2)} / ${fmt(r.kcal, 0)} / ${fmt(r.prot, 0)} / ${fmt(r.steps, 0)} / ${r.n} / ${r.sets} / ${r.card || 0} / ${fmt(r.waist)}`));
+  L.push("Тренировки:");
+  sessionList().filter(x => x.date >= from).reverse().forEach(x => {
+    const w = WMAP[x.type];
+    const parts = Object.entries(x.sets || {}).map(([name, arr]) => {
+      const ss = arr.filter(q => q && q.r != null).map(q => (q.w != null ? fmtW(q.w) + "×" : "") + q.r + (q.rir != null ? "@" + q.rir : ""));
+      return ss.length ? `${name.replace(/\s*\(.*\)/, "")}: ${ss.join(" ")}` : null;
+    }).filter(Boolean);
+    L.push(`${dShort(x.date)} ${x.type}${parts.length ? "" : " (без записей)"}`);
+    parts.forEach(p => L.push("  " + p));
+    if (x.notes) L.push("  Заметки: " + x.notes);
+  });
+  const meas = [...S.measures.entries()].filter(([d]) => d >= from).sort();
+  if (meas.length) { L.push("Замеры:"); meas.forEach(([d, m]) => L.push(`${dShort(d)}: ` + CFG.measures.filter(f => m[f.k] != null).map(f => `${f.label} ${fmt(m[f.k])}`).join(", "))); }
+  return L.join("\n");
+}
+document.addEventListener("click", async e => {
   if (!$("#view-account") || $("#view-account").hidden) return;
   const t = e.target;
   const sw = t.closest("[data-switch]");
   if (sw) { Store.write("profile", "me", { program: sw.dataset.switch }, false); useProgram(sw.dataset.switch); S.cur = null; renderAccount(); return; }
   if (t.id === "s-now") { Sync.run(); return; }
+  if (t.id === "s-pick") { $("#file-in").value = ""; $("#file-in").click(); return; }
+  if (t.id === "s-import-text") {
+    const txt = $("#s-text").value.trim();
+    if (!txt) { $("#s-msg").textContent = "Поле пустое: вставь текст."; return; }
+    try { const n = importText(txt); $("#s-msg").textContent = n ? `Импортировано записей: ${n}.` : "В тексте не нашлось записей."; if (n) $("#s-text").value = ""; }
+    catch (err) { $("#s-msg").textContent = "Текст не распознан: скопируй его целиком, от первой { до последней }."; }
+    return;
+  }
+  if (t.id === "s-report") { await copyOut(buildReport(), $("#s-msg2"), "Отчёт скопирован. Вставь его в чат с Claude."); return; }
   if (t.id === "s-export") {
-    const out = { app: "trainer", exportedAt: new Date().toISOString(), program: CFG.who, rows: Object.values(Store.rows).filter(r => !r.deleted && r.col !== "profile") };
-    const blob = new Blob([JSON.stringify(out, null, 1)], { type: "application/json" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `trainer-${CFG.who}-${today()}.json`; document.body.appendChild(a); a.click(); a.remove();
-    $("#s-msg").textContent = "Файл сохранён в «Загрузки».";
+    const out = JSON.stringify({ app: "trainer", exportedAt: new Date().toISOString(), program: CFG.who, rows: Object.values(Store.rows).filter(r => !r.deleted && r.col !== "profile") });
+    if (window.Capacitor) { await copyOut(out, $("#s-msg2"), "Все данные скопированы как текст. Вставь их в заметку или в чат."); return; }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([out], { type: "application/json" })); a.download = `trainer-${CFG.who}-${today()}.json`; document.body.appendChild(a); a.click(); a.remove();
+    $("#s-msg2").textContent = "Файл сохранён в «Загрузки».";
     return;
   }
   if (t.id === "s-out") {
@@ -796,16 +850,11 @@ document.addEventListener("click", e => {
     S.delArm = null; Auth.logout(); location.reload();
   }
 });
-document.addEventListener("change", async e => {
-  if (e.target.id !== "s-file") return;
+$("#file-in").addEventListener("change", async e => {
   const f = e.target.files?.[0]; if (!f) return;
-  try {
-    const j = JSON.parse(await f.text());
-    const rows = Array.isArray(j.rows) ? j.rows : [];
-    let n = 0;
-    rows.forEach(r => { if (r && r.col && r.id && r.data && ["sessions", "daily", "measures", "cardio"].includes(r.col)) { Store.write(r.col, String(r.id), r.data, false); n++; } });
-    $("#s-msg").textContent = n ? `Импортировано записей: ${n}.` : "В файле не нашлось записей.";
-  } catch (err) { $("#s-msg").textContent = "Не удалось прочитать файл: это должен быть .json из экспорта."; }
+  const msg = () => $("#s-msg") || { set textContent(v) { notice(v); } };
+  try { const n = importText(await f.text()); msg().textContent = n ? `Импортировано записей: ${n}.` : "В файле не нашлось записей."; }
+  catch (err) { msg().textContent = "Не удалось прочитать файл: это должен быть .json из экспорта."; }
 });
 
 async function boot() {
