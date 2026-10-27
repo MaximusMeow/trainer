@@ -219,7 +219,7 @@ window.PROGRAMS = {
       "hint": "Жим Паллофа: «pallof press»"
      },
      {
-      "name": "Сгибания запястий со штангой сидя (хват снизу)",
+      "name": "Сгибания кистей со штангой сидя (ладони вверх)",
       "sets": 3,
       "reps": "12–20",
       "rir": "1–2",
@@ -233,7 +233,7 @@ window.PROGRAMS = {
       "rirMin": 1,
       "inc": 2.5,
       "noWeight": false,
-      "hint": "Видео: «wrist curl barbell»"
+      "hint": "Видео: «barbell wrist curl»"
      },
      {
       "name": "Вис на полотенцах (повт. = секунды, вес = доп.)",
@@ -537,72 +537,38 @@ window.PROGRAMS = {
       "noWeight": false
      },
      {
-      "name": "Пронация кисти с гантелью-рычагом (вес на рычаге)",
+      "name": "Сгибания кисти с гантелью сидя, по одной руке (ладонь вверх, вес гантели)",
       "sets": 2,
-      "reps": "10–15 / рука",
-      "rir": "2",
-      "rest": "90 с",
-      "restSec": 90,
-      "kind": "",
-      "start": null,
-      "lo": 10,
-      "hi": 15,
-      "sec": false,
-      "rirMin": 2,
-      "inc": 1.25,
-      "noWeight": false,
-      "hint": "Видео: «dumbbell pronation» или «пронация армрестлинг»"
-     },
-     {
-      "name": "Супинация кисти с гантелью-рычагом (вес на рычаге)",
-      "sets": 2,
-      "reps": "10–15 / рука",
-      "rir": "2",
-      "rest": "90 с",
-      "restSec": 90,
-      "kind": "",
-      "start": null,
-      "lo": 10,
-      "hi": 15,
-      "sec": false,
-      "rirMin": 2,
-      "inc": 1.25,
-      "noWeight": false,
-      "hint": "Видео: «dumbbell supination» или «супинация армрестлинг»"
-     },
-     {
-      "name": "Райзинг: подъём кисти большим пальцем вверх с гантелью-рычагом",
-      "sets": 2,
-      "reps": "12–15 / рука",
-      "rir": "2",
-      "rest": "90 с",
-      "restSec": 90,
-      "kind": "",
-      "start": null,
-      "lo": 12,
-      "hi": 15,
-      "sec": false,
-      "rirMin": 2,
-      "inc": 1.25,
-      "noWeight": false,
-      "hint": "Видео: «radial deviation dumbbell» или «райзинг армрестлинг»"
-     },
-     {
-      "name": "Обратные сгибания запястий со штангой (хват сверху)",
-      "sets": 2,
-      "reps": "15–20",
+      "reps": "12–20 / рука",
       "rir": "1–2",
       "rest": "90 с",
       "restSec": 90,
       "kind": "",
-      "start": 15,
+      "start": 10,
+      "lo": 12,
+      "hi": 20,
+      "sec": false,
+      "rirMin": 1,
+      "inc": 2,
+      "noWeight": false,
+      "hint": "Видео: «dumbbell wrist curl»"
+     },
+     {
+      "name": "Обратные сгибания кисти с гантелью сидя, по одной руке (ладонь вниз, вес гантели)",
+      "sets": 2,
+      "reps": "15–20 / рука",
+      "rir": "1–2",
+      "rest": "90 с",
+      "restSec": 90,
+      "kind": "",
+      "start": 6,
       "lo": 15,
       "hi": 20,
       "sec": false,
       "rirMin": 1,
-      "inc": 2.5,
+      "inc": 2,
       "noWeight": false,
-      "hint": "Видео: «reverse wrist curl»"
+      "hint": "Видео: «dumbbell reverse wrist curl»"
      }
     ]
    },
