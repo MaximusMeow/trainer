@@ -215,10 +215,11 @@ window.PROGRAMS = {
       "sec": false,
       "rirMin": 2,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "Жим Паллофа: «pallof press»"
      },
      {
-      "name": "Сгибания запястий со штангой сидя",
+      "name": "Сгибания запястий со штангой сидя (хват снизу)",
       "sets": 3,
       "reps": "12–20",
       "rir": "1–2",
@@ -231,7 +232,8 @@ window.PROGRAMS = {
       "sec": false,
       "rirMin": 1,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "Видео: «wrist curl barbell»"
      },
      {
       "name": "Вис на полотенцах (повт. = секунды, вес = доп.)",
@@ -247,7 +249,8 @@ window.PROGRAMS = {
       "sec": true,
       "rirMin": 2,
       "inc": 5,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "Видео: «towel hang grip»"
      }
     ]
    },
@@ -534,7 +537,7 @@ window.PROGRAMS = {
       "noWeight": false
      },
      {
-      "name": "Пронация с рычагом (вес на рычаге)",
+      "name": "Пронация кисти с гантелью-рычагом (вес на рычаге)",
       "sets": 2,
       "reps": "10–15 / рука",
       "rir": "2",
@@ -547,10 +550,11 @@ window.PROGRAMS = {
       "sec": false,
       "rirMin": 2,
       "inc": 1.25,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "Видео: «dumbbell pronation» или «пронация армрестлинг»"
      },
      {
-      "name": "Супинация с рычагом (вес на рычаге)",
+      "name": "Супинация кисти с гантелью-рычагом (вес на рычаге)",
       "sets": 2,
       "reps": "10–15 / рука",
       "rir": "2",
@@ -563,10 +567,11 @@ window.PROGRAMS = {
       "sec": false,
       "rirMin": 2,
       "inc": 1.25,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "Видео: «dumbbell supination» или «супинация армрестлинг»"
      },
      {
-      "name": "Подъём рычага вверх — райзинг",
+      "name": "Райзинг: подъём кисти большим пальцем вверх с гантелью-рычагом",
       "sets": 2,
       "reps": "12–15 / рука",
       "rir": "2",
@@ -579,10 +584,11 @@ window.PROGRAMS = {
       "sec": false,
       "rirMin": 2,
       "inc": 1.25,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "Видео: «radial deviation dumbbell» или «райзинг армрестлинг»"
      },
      {
-      "name": "Разгибания запястий со штангой",
+      "name": "Обратные сгибания запястий со штангой (хват сверху)",
       "sets": 2,
       "reps": "15–20",
       "rir": "1–2",
@@ -595,7 +601,8 @@ window.PROGRAMS = {
       "sec": false,
       "rirMin": 1,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "Видео: «reverse wrist curl»"
      }
     ]
    },
@@ -617,7 +624,8 @@ window.PROGRAMS = {
       "sec": false,
       "rirMin": 3,
       "inc": 2.5,
-      "noWeight": true
+      "noWeight": true,
+      "hint": "Видео: «band external rotation»"
      },
      {
       "name": "Жим штанги стоя",
@@ -966,7 +974,8 @@ window.PROGRAMS = {
       "sec": false,
       "rirMin": 2,
       "inc": 2.5,
-      "noWeight": true
+      "noWeight": true,
+      "hint": "Видео: «dead bug exercise»"
      }
     ]
    },

@@ -188,7 +188,7 @@ function exCard(ex, i, cur) {
   }
   const allDone = n > 0 && sets.filter(x => x && x.done).length >= n;
   return `<article class="card ex${allDone ? " done-all" : ""}" id="ex-${i}">
-    <div class="ex-head"><h3>${esc(ex.name)}</h3><span class="plan">${ex.kind === "emom" ? "10 мин × 8" : ex.sets + " × " + esc(ex.reps)} · RIR ${esc(ex.rir)} · ${esc(ex.rest)}</span></div>
+    <div class="ex-head"><h3>${esc(ex.name)}${ex.hint ? `<span class="hint">${esc(ex.hint)}</span>` : ""}</h3><span class="plan">${ex.kind === "emom" ? "10 мин × 8" : ex.sets + " × " + esc(ex.reps)} · RIR ${esc(ex.rir)} · ${esc(ex.rest)}</span></div>
     ${prev}
     <div class="sugg">${sg.w != null ? `Сегодня: <b>${fmtW(sg.w)} кг</b> · ` : ""}${esc(sg.text)}</div>
     <div class="sets">${rows}</div>
@@ -497,7 +497,7 @@ function renderProgram() {
   const tg = CFG.who === "anya" ? `Калории ${CFG.kcal} (перед месячными ${CFG.kcalPms}) · белок ${CFG.protein} г · шаги ${CFG.steps}` : `Калории ~${CFG.kcal} (корректируется по темпу набора) · белок от ${CFG.protein} г`;
   let h = `<div class="card"><h2>Цель</h2><p>${esc(CFG.goal)}</p><p class="small muted">${esc(tg)}</p><ul class="rules">${CFG.rules.map(r => `<li>${esc(r)}</li>`).join("")}</ul></div>`;
   CFG.workouts.forEach(w => {
-    h += `<div class="card"><h2>${esc(w.key)}</h2><p class="small muted">${esc(w.title)}</p><div class="tbl-wrap"><table><thead><tr><th>Упражнение</th><th>Подх. × повт.</th><th>RIR</th><th>Отдых</th></tr></thead><tbody>${w.exercises.map(ex => `<tr><td style="white-space:normal">${esc(ex.name)}</td><td>${ex.sets} × ${esc(ex.reps)}</td><td>${esc(ex.rir)}</td><td>${esc(ex.rest)}</td></tr>`).join("")}</tbody></table></div></div>`;
+    h += `<div class="card"><h2>${esc(w.key)}</h2><p class="small muted">${esc(w.title)}</p><div class="tbl-wrap"><table class="prog-tbl"><thead><tr><th>Упражнение</th><th>Подх. × повт.</th><th>RIR</th><th>Отдых</th></tr></thead><tbody>${w.exercises.map(ex => `<tr><td style="white-space:normal">${esc(ex.name)}${ex.hint ? `<span class="hint">${esc(ex.hint)}</span>` : ""}</td><td>${ex.sets} × ${esc(ex.reps)}</td><td>${esc(ex.rir)}</td><td>${esc(ex.rest)}</td></tr>`).join("")}</tbody></table></div></div>`;
   });
   v.innerHTML = h;
 }
