@@ -60,9 +60,10 @@ function lastFor(type, exName, beforeDate) {
 function suggest(ex, type, date) {
   const last = lastFor(type, ex.name, date);
   if (ex.kind === "emom") {
-    if (!last) return { text: "Цель: 10 раундов по 8 повторов" };
+    const R = ex.rounds || 10, P = ex.perRound || 8;
+    if (!last) return { text: `Цель: ${R} раундов по ${P} повторов` };
     const tot = last.sets[0].r;
-    return { prev: last, text: `Цель: ${tot >= 120 ? "+5 кг и снова 80" : (tot + 10) + " повторов (+1 в раунде)"}` };
+    return { prev: last, text: `Цель: ${tot >= R * 12 ? "+5 кг и снова " + R * P : (tot + R) + " повторов (+1 в раунде)"}` };
   }
   if (!last) {
     if (ex.noWeight) return { text: ex.sec ? `Цель: ${ex.lo}–${ex.hi} с` : `Цель: ${ex.lo}–${ex.hi} повторов` };
@@ -181,14 +182,14 @@ function exCard(ex, i, cur) {
     rows += `<div class="set${nw ? " nw" : ""}${st.done ? " done" : ""}" data-ex="${i}" data-s="${s}">
       <span class="n">${s + 1}</span>
       ${nw ? "" : `<input id="w-${i}-${s}" data-f="w" inputmode="decimal" aria-label="Вес, подход ${s + 1}" value="${st.w != null ? fmtW(st.w) : ""}" placeholder="${wHint}">`}
-      <input id="r-${i}-${s}" data-f="r" inputmode="numeric" aria-label="Повторы, подход ${s + 1}" value="${st.r ?? ""}" placeholder="${ex.kind === "emom" ? "80" : (ex.lo != null ? ex.lo + "–" + ex.hi : "")}">
+      <input id="r-${i}-${s}" data-f="r" inputmode="numeric" aria-label="Повторы, подход ${s + 1}" value="${st.r ?? ""}" placeholder="${ex.kind === "emom" ? String((ex.rounds || 10) * (ex.perRound || 8)) : (ex.lo != null ? ex.lo + "–" + ex.hi : "")}">
       <input id="i-${i}-${s}" data-f="rir" inputmode="numeric" aria-label="Запас, подход ${s + 1}" value="${st.rir ?? ""}" placeholder="${ex.rirMin ?? ""}">
       <button type="button" class="tick" data-tick aria-pressed="${!!st.done}" aria-label="Подход ${s + 1} сделан">✓</button>
     </div>`;
   }
   const allDone = n > 0 && sets.filter(x => x && x.done).length >= n;
   return `<article class="card ex${allDone ? " done-all" : ""}" id="ex-${i}">
-    <div class="ex-head"><h3>${esc(ex.name)}${ex.hint ? `<span class="hint">${esc(ex.hint)}</span>` : ""}</h3><span class="plan">${ex.kind === "emom" ? "10 мин × 8" : ex.sets + " × " + esc(ex.reps)} · RIR ${esc(ex.rir)} · ${esc(ex.rest)}</span></div>
+    <div class="ex-head"><h3>${esc(ex.name)}${ex.hint ? `<span class="hint">${esc(ex.hint)}</span>` : ""}</h3><span class="plan">${ex.kind === "emom" ? (ex.rounds || 10) + " мин × " + (ex.perRound || 8) : ex.sets + " × " + esc(ex.reps)} · RIR ${esc(ex.rir)} · ${esc(ex.rest)}</span></div>
     ${prev}
     <div class="sugg">${sg.w != null ? `Сегодня: <b>${fmtW(sg.w)} кг</b> · ` : ""}${esc(sg.text)}</div>
     <div class="sets">${rows}</div>
