@@ -93,8 +93,8 @@ window.PROGRAMS = {
   "hrLow": 115,
   "hrHigh": 135,
   "rules": [
-   "Основные упражнения: топ-сет и бэк-оффы, вес считает приложение. Выполнил план с запасом 2 — в следующий раз +шаг; запас 3+ — ещё больше; 0–1 — вес остаётся или снижается.",
-   "В основных упражнениях без отказа. Изоляция: последний подход до запаса 0–1, двойная прогрессия — верх диапазона во всех подходах → +вес.",
+   "Основные упражнения: топ-сет и бэк-оффы, вес и повторы считает приложение. Выполнил план с запасом 2 — в следующий раз +1 повтор или +5 кг; запас 3+ — прибавка больше; 0–1 — план остаётся или снижается.",
+   "В основных упражнениях без отказа. Изоляция: последний подход до запаса 0–1, двойная прогрессия — верх диапазона во всех подходах → +5 кг (гантели +2 кг).",
    "Отдых: основные 3–5 мин, второстепенные 2–3 мин, изоляция 90–120 с, внутри кластера 20–30 с.",
    "Признаки усталости (2 и больше за 1–2 недели): расчётный максимум ниже на 5 %+ две тренировки подряд; привычный вес заметно тяжелее; сон меньше 7 ч три ночи; новая боль в суставах.",
    "Темп набора 0,25–0,4 кг/нед по среднему весу. 2 недели меньше 0,2 → +150 ккал; больше 0,5 и талия +1 см за месяц → −150 ккал.",
@@ -116,12 +116,12 @@ window.PROGRAMS = {
       "rest": "3–5 мин",
       "restSec": 240,
       "kind": "main",
-      "start": 87.5,
+      "start": 85,
       "lo": null,
       "hi": null,
       "sec": false,
       "rirMin": 2,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "hint": "Топ-сет + бэк-оффы. Опускание 1,5–2 с, внизу не расслабляйся."
      },
@@ -141,7 +141,8 @@ window.PROGRAMS = {
       "inc": 5,
       "noWeight": false,
       "taper": "skip",
-      "hint": "Если тянет поясницу — короче амплитуда на 5–10 см или замени на гиперэкстензию"
+      "hint": "Если тянет поясницу — короче амплитуда на 5–10 см или замени на гиперэкстензию",
+      "bar": true
      },
      {
       "name": "Болгарские сплит-приседания (вес гантели)",
@@ -173,7 +174,7 @@ window.PROGRAMS = {
       "hi": 12,
       "sec": false,
       "rirMin": 0,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "taper": "skip"
      },
@@ -208,7 +209,7 @@ window.PROGRAMS = {
       "hi": 15,
       "sec": false,
       "rirMin": 1,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": true
      },
      {
@@ -224,7 +225,7 @@ window.PROGRAMS = {
       "hi": 12,
       "sec": false,
       "rirMin": 2,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "hint": "Жим Паллофа: «pallof press»"
      },
@@ -241,9 +242,10 @@ window.PROGRAMS = {
       "hi": 20,
       "sec": false,
       "rirMin": 1,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
-      "hint": "Видео: «barbell wrist curl»"
+      "hint": "Видео: «barbell wrist curl»",
+      "bar": true
      },
      {
       "name": "Вис на полотенцах (повт. = секунды, вес = доп.)",
@@ -260,7 +262,8 @@ window.PROGRAMS = {
       "rirMin": 2,
       "inc": 5,
       "noWeight": false,
-      "hint": "Останавливайся раньше отказа хвата, чтобы не мешать тягам"
+      "hint": "Останавливайся раньше отказа хвата, чтобы не мешать тягам",
+      "bar": true
      }
     ]
    },
@@ -282,7 +285,7 @@ window.PROGRAMS = {
       "hi": null,
       "sec": false,
       "rirMin": 2,
-      "inc": 1.25,
+      "inc": 5,
       "noWeight": false,
       "hint": "Топ-сет + бэк-оффы"
      },
@@ -295,12 +298,12 @@ window.PROGRAMS = {
       "rest": "3–4 мин",
       "restSec": 180,
       "kind": "mainbw",
-      "start": 27.5,
+      "start": 25,
       "lo": null,
       "hi": null,
       "sec": false,
       "rirMin": 2,
-      "inc": 1.25,
+      "inc": 5,
       "noWeight": false,
       "hint": "Верхний хват. Вес считается с учётом веса тела"
      },
@@ -313,12 +316,12 @@ window.PROGRAMS = {
       "rest": "2–3 мин",
       "restSec": 150,
       "kind": "",
-      "start": 37,
+      "start": 40,
       "lo": null,
       "hi": null,
       "sec": false,
       "rirMin": 2,
-      "inc": 1,
+      "inc": 5,
       "noWeight": false,
       "hint": "Вторая тренировка жима стоя за цикл: лёгкие подходы на технику, без напряга"
      },
@@ -352,7 +355,7 @@ window.PROGRAMS = {
       "hi": 12,
       "sec": false,
       "rirMin": 1,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "taper": "skip"
      },
@@ -369,7 +372,7 @@ window.PROGRAMS = {
       "hi": 20,
       "sec": false,
       "rirMin": 0,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "hint": "Всегда на одном и том же тренажёре, чтобы веса сравнивались"
      },
@@ -386,7 +389,7 @@ window.PROGRAMS = {
       "hi": 15,
       "sec": false,
       "rirMin": 1,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "hint": "Длинная головка трицепса растёт лучше в растяжении. Вес обычно ~70 % от разгибаний вниз"
      },
@@ -403,8 +406,9 @@ window.PROGRAMS = {
       "hi": 12,
       "sec": false,
       "rirMin": 0,
-      "inc": 2.5,
-      "noWeight": false
+      "inc": 5,
+      "noWeight": false,
+      "bar": true
      },
      {
       "name": "Подъём штанги обратным хватом",
@@ -419,8 +423,9 @@ window.PROGRAMS = {
       "hi": 12,
       "sec": false,
       "rirMin": 1,
-      "inc": 2.5,
-      "noWeight": false
+      "inc": 5,
+      "noWeight": false,
+      "bar": true
      }
     ]
    },
@@ -437,12 +442,12 @@ window.PROGRAMS = {
       "rest": "3 мин",
       "restSec": 180,
       "kind": "",
-      "start": 72.5,
+      "start": 75,
       "lo": null,
       "hi": null,
       "sec": false,
       "rirMin": 2,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "hint": "Первым упражнением. Пауза в нижней точке без расслабления — тренирует выход из «ямы»"
      },
@@ -455,12 +460,12 @@ window.PROGRAMS = {
       "rest": "3–5 мин",
       "restSec": 240,
       "kind": "main",
-      "start": 117.5,
+      "start": 115,
       "lo": null,
       "hi": null,
       "sec": false,
       "rirMin": 2,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "hint": "Гриф над серединой стопы, голени касаются грифа, слабину выбрать до отрыва"
      },
@@ -495,7 +500,7 @@ window.PROGRAMS = {
       "hi": 15,
       "sec": false,
       "rirMin": 0,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "taper": "skip",
       "hint": "Если можно — откинь спинку назад"
@@ -513,7 +518,7 @@ window.PROGRAMS = {
       "hi": 15,
       "sec": false,
       "rirMin": 0,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "taper": "skip"
      },
@@ -530,7 +535,7 @@ window.PROGRAMS = {
       "hi": 15,
       "sec": false,
       "rirMin": 1,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "taper": "skip"
      },
@@ -616,7 +621,7 @@ window.PROGRAMS = {
       "hi": 20,
       "sec": false,
       "rirMin": 1,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "taper": "skip",
       "optional": true,
@@ -641,7 +646,7 @@ window.PROGRAMS = {
       "hi": 15,
       "sec": false,
       "rirMin": 3,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": true,
       "hint": "Разминка плеч. Видео: «band external rotation»",
       "keepTest": true
@@ -655,14 +660,14 @@ window.PROGRAMS = {
       "rest": "3–4 мин",
       "restSec": 180,
       "kind": "main",
-      "start": 42,
+      "start": 40,
       "lo": null,
       "hi": null,
       "sec": false,
       "rirMin": 2,
-      "inc": 1,
+      "inc": 5,
       "noWeight": false,
-      "hint": "Микроблины 0,5 кг на сторону. Нет микроблинов — округляй вниз до ближайшего возможного веса"
+      "hint": "Шаг 5 кг для жима стоя большой, поэтому прогресс идёт сначала повторами (40 × 6 → 40 × 8), потом весом"
      },
      {
       "name": "Брусья с весом (доп. вес)",
@@ -678,7 +683,7 @@ window.PROGRAMS = {
       "hi": null,
       "sec": false,
       "rirMin": 2,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false
      },
      {
@@ -696,7 +701,7 @@ window.PROGRAMS = {
       "hi": 40,
       "sec": false,
       "rirMin": 3,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "taper": "skip",
       "hint": "+1–2 повтора к сумме раз в 1–2 недели",
@@ -717,7 +722,7 @@ window.PROGRAMS = {
       "hi": 40,
       "sec": false,
       "rirMin": 3,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "taper": "skip",
       "hint": "+1–2 повтора к сумме раз в 1–2 недели",
@@ -736,7 +741,7 @@ window.PROGRAMS = {
       "hi": 15,
       "sec": false,
       "rirMin": 1,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "taper": "skip"
      },
@@ -753,7 +758,7 @@ window.PROGRAMS = {
       "hi": 20,
       "sec": false,
       "rirMin": 0,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false
      },
      {
@@ -785,9 +790,10 @@ window.PROGRAMS = {
       "hi": 12,
       "sec": false,
       "rirMin": 0,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
-      "hint": "По желанию — с накладками на толстый гриф"
+      "hint": "По желанию — с накладками на толстый гриф",
+      "bar": true
      },
      {
       "name": "Разгибания на трицепс вниз (прямая рукоять)",
@@ -802,7 +808,7 @@ window.PROGRAMS = {
       "hi": 15,
       "sec": false,
       "rirMin": 0,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": false,
       "aliases": [
        "Разгибания на трицепс (канат)"
@@ -821,7 +827,7 @@ window.PROGRAMS = {
       "hi": 15,
       "sec": false,
       "rirMin": 1,
-      "inc": 2.5,
+      "inc": 5,
       "noWeight": true,
       "aliases": [
        "Ролик для пресса"
@@ -830,9 +836,13 @@ window.PROGRAMS = {
     ]
    }
   ],
+  "plates": {
+   "bar": 5,
+   "small": 2.5
+  },
   "schemes": {
    "squat": {
-    "step": 2.5,
+    "step": 5,
     "restTop": 240,
     "restBo": 180,
     "acc": {
@@ -920,7 +930,7 @@ window.PROGRAMS = {
     }
    },
    "bench": {
-    "step": 1.25,
+    "step": 5,
     "restTop": 240,
     "restBo": 180,
     "acc": {
@@ -1006,7 +1016,7 @@ window.PROGRAMS = {
     }
    },
    "dl": {
-    "step": 2.5,
+    "step": 5,
     "restTop": 240,
     "restBo": 180,
     "acc": {
@@ -1067,7 +1077,7 @@ window.PROGRAMS = {
     }
    },
    "ohp": {
-    "step": 1,
+    "step": 5,
     "restTop": 180,
     "restBo": 150,
     "acc": {
@@ -1155,7 +1165,7 @@ window.PROGRAMS = {
     }
    },
    "pull": {
-    "step": 1.25,
+    "step": 5,
     "restTop": 180,
     "restBo": 150,
     "acc": {
@@ -1238,7 +1248,7 @@ window.PROGRAMS = {
     }
    },
    "pause": {
-    "step": 2.5,
+    "step": 5,
     "ref": "Присед со штангой",
     "rest": 180,
     "acc": {
@@ -1294,7 +1304,7 @@ window.PROGRAMS = {
     "test": null
    },
    "ohpLight": {
-    "step": 1,
+    "step": 5,
     "ref": "Жим штанги стоя",
     "rest": 150,
     "acc": {
@@ -1341,7 +1351,7 @@ window.PROGRAMS = {
     "test": null
    },
    "dips": {
-    "step": 2.5,
+    "step": 5,
     "rest": 180,
     "acc": {
      "straight": {
@@ -1467,7 +1477,8 @@ window.PROGRAMS = {
     }
    ],
    "legend": [
-    "ТС — топ-сет: самый тяжёлый рабочий подход, всегда с запасом 2 (RPE 8). Вес на сегодня приложение считает по прошлому топ-сету.",
+    "ТС — топ-сет: самый тяжёлый рабочий подход, всегда с запасом 2 (RPE 8). Вес и повторы на сегодня приложение считает по прошлому топ-сету.",
+    "Шаг веса в зале 5 кг, поэтому приложение берёт только доступные веса и подстраивает повторы: например, 85 × 6 вместо 87,5 × 5. Прогресс идёт так: +1 повтор, потом +5 кг и снова меньше повторов. Купишь блины по 1,25 кг — включи их во вкладке «Аккаунт».",
     "Б1, Б2… — бэк-оффы: их вес считается от твоего сегодняшнего топ-сета, на 5–10 % легче.",
     "Кластер 2+2+2 — один подход с паузами 20–30 с: 2 повтора, пауза, 2, пауза, 2. В «Повт.» пиши сумму, запас — по последнему блоку. Кнопка ⏱ запускает паузу.",
     "О1, О2… — одиночки по 1 повтору с отдыхом 45 с. Р1… — подходы разгрузки. Т1–Т3 — тестовые одиночки.",
