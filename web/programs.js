@@ -5,7 +5,7 @@ window.PROGRAMS = {
   "name": "Макс",
   "appTitle": "Тренировки Макса",
   "startWeight": 67.1,
-  "goal": "Масса до 75–80 кг, сила во всех базовых, выносливость",
+  "goal": "Масса до 75–80 кг, сила в базовых (в первую очередь присед и жим стоя), выносливость",
   "kcal": 2900,
   "protein": 130,
   "steps": null,
@@ -93,11 +93,13 @@ window.PROGRAMS = {
   "hrLow": 115,
   "hrHigh": 135,
   "rules": [
-   "Двойная прогрессия: держишь вес, пока во всех подходах не дойдёшь до верха диапазона, потом добавляешь шаг.",
-   "В базовых упражнениях запас 1–2 повтора. Отказ только в изоляции.",
-   "Темп набора 0,25–0,4 кг в неделю по среднему весу. Медленнее 0,15 → +150–200 ккал, быстрее 0,5 → −150 ккал.",
-   "Разгрузка каждые 6–8 недель: половина подходов, запас 3–4.",
-   "Креатин 5 г каждый день, сон 8+ часов."
+   "Основные упражнения: топ-сет и бэк-оффы, вес считает приложение. Выполнил план с запасом 2 — в следующий раз +шаг; запас 3+ — ещё больше; 0–1 — вес остаётся или снижается.",
+   "В основных упражнениях без отказа. Изоляция: последний подход до запаса 0–1, двойная прогрессия — верх диапазона во всех подходах → +вес.",
+   "Отдых: основные 3–5 мин, второстепенные 2–3 мин, изоляция 90–120 с, внутри кластера 20–30 с.",
+   "Признаки усталости (2 и больше за 1–2 недели): расчётный максимум ниже на 5 %+ две тренировки подряд; привычный вес заметно тяжелее; сон меньше 7 ч три ночи; новая боль в суставах.",
+   "Темп набора 0,25–0,4 кг/нед по среднему весу. 2 недели меньше 0,2 → +150 ккал; больше 0,5 и талия +1 см за месяц → −150 ккал.",
+   "Кардио: зона 2 после силовой 15–20 мин и интервалы 4 × 4 на велосипеде раз в неделю, не накануне Низа A.",
+   "Креатин 5 г каждый день. Витамин D 4000 МЕ — не ежедневно: 1 таблетка раз в 5 дней или по анализу 25(OH)D."
   ],
   "phases": null,
   "workouts": [
@@ -107,35 +109,39 @@ window.PROGRAMS = {
     "exercises": [
      {
       "name": "Присед со штангой",
+      "scheme": "squat",
       "sets": 4,
-      "reps": "4–6",
-      "rir": "1–2",
-      "rest": "3–4 мин",
+      "reps": "по неделям",
+      "rir": "2",
+      "rest": "3–5 мин",
       "restSec": 240,
       "kind": "main",
-      "start": 90,
-      "lo": 4,
-      "hi": 6,
+      "start": 87.5,
+      "lo": null,
+      "hi": null,
       "sec": false,
-      "rirMin": 1,
+      "rirMin": 2,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "Топ-сет + бэк-оффы. Опускание 1,5–2 с, внизу не расслабляйся."
      },
      {
       "name": "Румынская тяга",
       "sets": 3,
       "reps": "8–10",
-      "rir": "2",
+      "rir": "2–3",
       "rest": "3 мин",
       "restSec": 180,
       "kind": "",
-      "start": 60,
+      "start": 70,
       "lo": 8,
       "hi": 10,
       "sec": false,
       "rirMin": 2,
       "inc": 5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip",
+      "hint": "Если тянет поясницу — короче амплитуда на 5–10 см или замени на гиперэкстензию"
      },
      {
       "name": "Болгарские сплит-приседания (вес гантели)",
@@ -145,13 +151,14 @@ window.PROGRAMS = {
       "rest": "2 мин",
       "restSec": 120,
       "kind": "",
-      "start": 12,
+      "start": 14,
       "lo": 8,
       "hi": 12,
       "sec": false,
       "rirMin": 1,
       "inc": 2,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip"
      },
      {
       "name": "Сгибания ног сидя",
@@ -161,13 +168,14 @@ window.PROGRAMS = {
       "rest": "2 мин",
       "restSec": 120,
       "kind": "",
-      "start": 60,
+      "start": 70,
       "lo": 8,
       "hi": 12,
       "sec": false,
       "rirMin": 0,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip"
      },
      {
       "name": "Икры сидя",
@@ -183,7 +191,9 @@ window.PROGRAMS = {
       "sec": false,
       "rirMin": 0,
       "inc": 5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip",
+      "hint": "Пауза 2 с внизу, в растянутом положении"
      },
      {
       "name": "Ролик для пресса",
@@ -209,7 +219,7 @@ window.PROGRAMS = {
       "rest": "60 с",
       "restSec": 60,
       "kind": "",
-      "start": 25,
+      "start": 20,
       "lo": 10,
       "hi": 12,
       "sec": false,
@@ -222,7 +232,7 @@ window.PROGRAMS = {
       "name": "Сгибания кистей со штангой сидя (ладони вверх)",
       "sets": 3,
       "reps": "12–20",
-      "rir": "1–2",
+      "rir": "0–1",
       "rest": "90 с",
       "restSec": 90,
       "kind": "",
@@ -239,7 +249,7 @@ window.PROGRAMS = {
       "name": "Вис на полотенцах (повт. = секунды, вес = доп.)",
       "sets": 2,
       "reps": "20–40 с",
-      "rir": "2",
+      "rir": "за 5–10 с до отказа",
       "rest": "2 мин",
       "restSec": 120,
       "kind": "",
@@ -250,7 +260,7 @@ window.PROGRAMS = {
       "rirMin": 2,
       "inc": 5,
       "noWeight": false,
-      "hint": "Видео: «towel hang grip»"
+      "hint": "Останавливайся раньше отказа хвата, чтобы не мешать тягам"
      }
     ]
    },
@@ -260,35 +270,57 @@ window.PROGRAMS = {
     "exercises": [
      {
       "name": "Жим лёжа",
+      "scheme": "bench",
       "sets": 4,
-      "reps": "4–6",
-      "rir": "1–2",
-      "rest": "3–4 мин",
+      "reps": "по неделям",
+      "rir": "2",
+      "rest": "3–5 мин",
       "restSec": 240,
       "kind": "main",
-      "start": 75,
-      "lo": 4,
-      "hi": 6,
+      "start": 80,
+      "lo": null,
+      "hi": null,
       "sec": false,
-      "rirMin": 1,
-      "inc": 2.5,
-      "noWeight": false
+      "rirMin": 2,
+      "inc": 1.25,
+      "noWeight": false,
+      "hint": "Топ-сет + бэк-оффы"
      },
      {
       "name": "Подтягивания с весом (доп. вес)",
+      "scheme": "pull",
       "sets": 4,
-      "reps": "4–6",
-      "rir": "1–2",
+      "reps": "по неделям",
+      "rir": "2",
       "rest": "3–4 мин",
-      "restSec": 240,
+      "restSec": 180,
       "kind": "mainbw",
       "start": 27.5,
-      "lo": 4,
-      "hi": 6,
+      "lo": null,
+      "hi": null,
       "sec": false,
-      "rirMin": 1,
-      "inc": 2.5,
-      "noWeight": false
+      "rirMin": 2,
+      "inc": 1.25,
+      "noWeight": false,
+      "hint": "Верхний хват. Вес считается с учётом веса тела"
+     },
+     {
+      "name": "Жим штанги стоя, лёгкий",
+      "scheme": "ohpLight",
+      "sets": 4,
+      "reps": "по неделям",
+      "rir": "4",
+      "rest": "2–3 мин",
+      "restSec": 150,
+      "kind": "",
+      "start": 37,
+      "lo": null,
+      "hi": null,
+      "sec": false,
+      "rirMin": 2,
+      "inc": 1,
+      "noWeight": false,
+      "hint": "Вторая тренировка жима стоя за цикл: лёгкие подходы на технику, без напряга"
      },
      {
       "name": "Жим гантелей на наклонной (вес гантели)",
@@ -296,15 +328,16 @@ window.PROGRAMS = {
       "reps": "8–12",
       "rir": "1",
       "rest": "2–3 мин",
-      "restSec": 180,
+      "restSec": 150,
       "kind": "",
-      "start": null,
+      "start": 22,
       "lo": 8,
       "hi": 12,
       "sec": false,
       "rirMin": 1,
       "inc": 2,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "Скамья под 30°"
      },
      {
       "name": "Тяга в тренажёре с упором",
@@ -312,15 +345,16 @@ window.PROGRAMS = {
       "reps": "8–12",
       "rir": "1",
       "rest": "2–3 мин",
-      "restSec": 180,
+      "restSec": 150,
       "kind": "",
-      "start": 55,
+      "start": 60,
       "lo": 8,
       "hi": 12,
       "sec": false,
       "rirMin": 1,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip"
      },
      {
       "name": "Махи в стороны на блоке",
@@ -330,29 +364,31 @@ window.PROGRAMS = {
       "rest": "90 с",
       "restSec": 90,
       "kind": "",
-      "start": 12.5,
+      "start": 35,
       "lo": 12,
       "hi": 20,
       "sec": false,
       "rirMin": 0,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "Всегда на одном и том же тренажёре, чтобы веса сравнивались"
      },
      {
-      "name": "Разгибания на трицепс в блоке",
+      "name": "Разгибания из-за головы на блоке (прямая рукоять)",
       "sets": 3,
       "reps": "10–15",
       "rir": "0–1",
       "rest": "2 мин",
       "restSec": 120,
       "kind": "",
-      "start": 20,
+      "start": 40,
       "lo": 10,
       "hi": 15,
       "sec": false,
-      "rirMin": 0,
+      "rirMin": 1,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "Длинная головка трицепса растёт лучше в растяжении. Вес обычно ~70 % от разгибаний вниз"
      },
      {
       "name": "Подъём штанги на бицепс",
@@ -362,7 +398,7 @@ window.PROGRAMS = {
       "rest": "2 мин",
       "restSec": 120,
       "kind": "",
-      "start": 30,
+      "start": 35,
       "lo": 8,
       "hi": 12,
       "sec": false,
@@ -378,67 +414,73 @@ window.PROGRAMS = {
       "rest": "2 мин",
       "restSec": 120,
       "kind": "",
-      "start": 20,
+      "start": 15,
       "lo": 8,
       "hi": 12,
       "sec": false,
       "rirMin": 1,
       "inc": 2.5,
       "noWeight": false
-     },
-     {
-      "name": "Ролик для пресса",
-      "sets": 3,
-      "reps": "6–12",
-      "rir": "2",
-      "rest": "90 с",
-      "restSec": 90,
-      "kind": "",
-      "start": null,
-      "lo": 6,
-      "hi": 12,
-      "sec": false,
-      "rirMin": 2,
-      "inc": 2.5,
-      "noWeight": true
      }
     ]
    },
    {
     "key": "Низ B",
-    "title": "Низ B — становая и объём квадрицепсов",
+    "title": "Низ B — паузный присед, становая, объём ног",
     "exercises": [
      {
-      "name": "Становая тяга",
-      "sets": 3,
-      "reps": "3–5",
-      "rir": "2",
-      "rest": "3–4 мин",
-      "restSec": 240,
-      "kind": "main",
-      "start": 90,
-      "lo": 3,
-      "hi": 5,
-      "sec": false,
-      "rirMin": 2,
-      "inc": 5,
-      "noWeight": false
-     },
-     {
-      "name": "Гакк-приседания",
-      "sets": 3,
-      "reps": "8–12",
-      "rir": "1",
+      "name": "Паузный присед (пауза 2 с внизу)",
+      "scheme": "pause",
+      "sets": 4,
+      "reps": "по неделям",
+      "rir": "3",
       "rest": "3 мин",
       "restSec": 180,
       "kind": "",
-      "start": null,
-      "lo": 8,
-      "hi": 12,
+      "start": 72.5,
+      "lo": null,
+      "hi": null,
+      "sec": false,
+      "rirMin": 2,
+      "inc": 2.5,
+      "noWeight": false,
+      "hint": "Первым упражнением. Пауза в нижней точке без расслабления — тренирует выход из «ямы»"
+     },
+     {
+      "name": "Становая тяга",
+      "scheme": "dl",
+      "sets": 4,
+      "reps": "по неделям",
+      "rir": "2",
+      "rest": "3–5 мин",
+      "restSec": 240,
+      "kind": "main",
+      "start": 117.5,
+      "lo": null,
+      "hi": null,
+      "sec": false,
+      "rirMin": 2,
+      "inc": 2.5,
+      "noWeight": false,
+      "hint": "Гриф над серединой стопы, голени касаются грифа, слабину выбрать до отрыва"
+     },
+     {
+      "name": "Жим ногами",
+      "sets": 3,
+      "reps": "10–15",
+      "rir": "1",
+      "rest": "2–3 мин",
+      "restSec": 150,
+      "kind": "",
+      "start": 200,
+      "lo": 10,
+      "hi": 15,
       "sec": false,
       "rirMin": 1,
       "inc": 5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip",
+      "hint": "Стопы чуть выше и шире, если беспокоят колени. Раньше: 180 × 20"
      },
      {
       "name": "Разгибания ног",
@@ -448,13 +490,15 @@ window.PROGRAMS = {
       "rest": "2 мин",
       "restSec": 120,
       "kind": "",
-      "start": null,
+      "start": 65,
       "lo": 10,
       "hi": 15,
       "sec": false,
       "rirMin": 0,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip",
+      "hint": "Если можно — откинь спинку назад"
      },
      {
       "name": "Сгибания ног сидя",
@@ -464,13 +508,14 @@ window.PROGRAMS = {
       "rest": "2 мин",
       "restSec": 120,
       "kind": "",
-      "start": null,
+      "start": 70,
       "lo": 10,
       "hi": 15,
       "sec": false,
       "rirMin": 0,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip"
      },
      {
       "name": "Сведение ног",
@@ -480,29 +525,14 @@ window.PROGRAMS = {
       "rest": "90 с",
       "restSec": 90,
       "kind": "",
-      "start": null,
+      "start": 60,
       "lo": 12,
       "hi": 15,
       "sec": false,
       "rirMin": 1,
       "inc": 2.5,
-      "noWeight": false
-     },
-     {
-      "name": "Разведение ног",
-      "sets": 2,
-      "reps": "15–20",
-      "rir": "1",
-      "rest": "90 с",
-      "restSec": 90,
-      "kind": "",
-      "start": null,
-      "lo": 15,
-      "hi": 20,
-      "sec": false,
-      "rirMin": 1,
-      "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip"
      },
      {
       "name": "Икры сидя",
@@ -512,39 +542,42 @@ window.PROGRAMS = {
       "rest": "90 с",
       "restSec": 90,
       "kind": "",
-      "start": null,
+      "start": 40,
       "lo": 12,
       "hi": 20,
       "sec": false,
       "rirMin": 0,
       "inc": 5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip",
+      "hint": "Пауза 2 с внизу"
      },
      {
       "name": "Гиперэкстензия 45°",
       "sets": 2,
       "reps": "10–15",
-      "rir": "2–3",
+      "rir": "2",
       "rest": "90 с",
       "restSec": 90,
       "kind": "",
-      "start": null,
+      "start": 25,
       "lo": 10,
       "hi": 15,
       "sec": false,
       "rirMin": 2,
       "inc": 5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip"
      },
      {
       "name": "Сгибания кисти с гантелью сидя, по одной руке (ладонь вверх, вес гантели)",
       "sets": 2,
       "reps": "12–20 / рука",
-      "rir": "1–2",
+      "rir": "0–1",
       "rest": "90 с",
       "restSec": 90,
       "kind": "",
-      "start": 10,
+      "start": 16,
       "lo": 12,
       "hi": 20,
       "sec": false,
@@ -557,7 +590,7 @@ window.PROGRAMS = {
       "name": "Обратные сгибания кисти с гантелью сидя, по одной руке (ладонь вниз, вес гантели)",
       "sets": 2,
       "reps": "15–20 / рука",
-      "rir": "1–2",
+      "rir": "0–1",
       "rest": "90 с",
       "restSec": 90,
       "kind": "",
@@ -569,6 +602,25 @@ window.PROGRAMS = {
       "inc": 2,
       "noWeight": false,
       "hint": "Видео: «dumbbell reverse wrist curl»"
+     },
+     {
+      "name": "Разведение ног",
+      "sets": 2,
+      "reps": "15–20",
+      "rir": "1",
+      "rest": "90 с",
+      "restSec": 90,
+      "kind": "",
+      "start": 70,
+      "lo": 15,
+      "hi": 20,
+      "sec": false,
+      "rirMin": 1,
+      "inc": 2.5,
+      "noWeight": false,
+      "taper": "skip",
+      "optional": true,
+      "hint": "Убирай первым, если не хватает времени"
      }
     ]
    },
@@ -591,75 +643,85 @@ window.PROGRAMS = {
       "rirMin": 3,
       "inc": 2.5,
       "noWeight": true,
-      "hint": "Видео: «band external rotation»"
+      "hint": "Разминка плеч. Видео: «band external rotation»",
+      "keepTest": true
      },
      {
       "name": "Жим штанги стоя",
-      "sets": 3,
-      "reps": "5–8",
+      "scheme": "ohp",
+      "sets": 4,
+      "reps": "по неделям",
+      "rir": "2",
+      "rest": "3–4 мин",
+      "restSec": 180,
+      "kind": "main",
+      "start": 42,
+      "lo": null,
+      "hi": null,
+      "sec": false,
+      "rirMin": 2,
+      "inc": 1,
+      "noWeight": false,
+      "hint": "Микроблины 0,5 кг на сторону. Нет микроблинов — округляй вниз до ближайшего возможного веса"
+     },
+     {
+      "name": "Брусья с весом (доп. вес)",
+      "scheme": "dips",
+      "sets": 4,
+      "reps": "по неделям",
       "rir": "2",
       "rest": "3 мин",
       "restSec": 180,
-      "kind": "main",
-      "start": 40,
-      "lo": 5,
-      "hi": 8,
+      "kind": "mainbw",
+      "start": 50,
+      "lo": null,
+      "hi": null,
       "sec": false,
       "rirMin": 2,
       "inc": 2.5,
       "noWeight": false
      },
      {
-      "name": "Брусья с весом (доп. вес)",
-      "sets": 3,
-      "reps": "6–10",
-      "rir": "1–2",
-      "rest": "3 мин",
-      "restSec": 180,
-      "kind": "mainbw",
-      "start": 35,
-      "lo": 6,
-      "hi": 10,
+      "name": "Подтягивания EMOM 5 мин верхним хватом (повт. = всего за 5 мин)",
+      "sets": 1,
+      "reps": "40 (5 × 8)",
+      "rir": "3+ в раунде",
+      "rest": "остаток минуты",
+      "restSec": 0,
+      "kind": "emom",
+      "rounds": 5,
+      "perRound": 8,
+      "start": null,
+      "lo": 40,
+      "hi": 40,
       "sec": false,
-      "rirMin": 1,
+      "rirMin": 3,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip",
+      "hint": "+1–2 повтора к сумме раз в 1–2 недели",
+      "keepTest": true
      },
      {
-     "name": "Подтягивания EMOM 5 мин верхним хватом (повт. = всего за 5 мин)",
-     "sets": 1,
-     "reps": "40 (5 × 8)",
-     "rir": "3+ в раунде",
-     "rest": "остаток минуты",
-     "restSec": 0,
-     "kind": "emom",
-     "rounds": 5,
-     "perRound": 8,
-     "start": null,
-     "lo": 40,
-     "hi": 40,
-     "sec": false,
-     "rirMin": 3,
-     "inc": 2.5,
-     "noWeight": false
-     },
-     {
-     "name": "Подтягивания EMOM 5 мин нижним хватом (повт. = всего за 5 мин)",
-     "sets": 1,
-     "reps": "40 (5 × 8)",
-     "rir": "3+ в раунде",
-     "rest": "остаток минуты",
-     "restSec": 0,
-     "kind": "emom",
-     "rounds": 5,
-     "perRound": 8,
-     "start": null,
-     "lo": 40,
-     "hi": 40,
-     "sec": false,
-     "rirMin": 3,
-     "inc": 2.5,
-     "noWeight": false
+      "name": "Подтягивания EMOM 5 мин нижним хватом (повт. = всего за 5 мин)",
+      "sets": 1,
+      "reps": "40 (5 × 8)",
+      "rir": "3+ в раунде",
+      "rest": "остаток минуты",
+      "restSec": 0,
+      "kind": "emom",
+      "rounds": 5,
+      "perRound": 8,
+      "start": null,
+      "lo": 40,
+      "hi": 40,
+      "sec": false,
+      "rirMin": 3,
+      "inc": 2.5,
+      "noWeight": false,
+      "taper": "skip",
+      "hint": "+1–2 повтора к сумме раз в 1–2 недели",
+      "keepTest": true
      },
      {
       "name": "Тяга нижнего блока",
@@ -669,13 +731,14 @@ window.PROGRAMS = {
       "rest": "2 мин",
       "restSec": 120,
       "kind": "",
-      "start": 55,
+      "start": 60,
       "lo": 10,
       "hi": 15,
       "sec": false,
       "rirMin": 1,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "taper": "skip"
      },
      {
       "name": "Обратная бабочка",
@@ -685,7 +748,7 @@ window.PROGRAMS = {
       "rest": "90 с",
       "restSec": 90,
       "kind": "",
-      "start": 20,
+      "start": 30,
       "lo": 12,
       "hi": 20,
       "sec": false,
@@ -701,7 +764,7 @@ window.PROGRAMS = {
       "rest": "90 с",
       "restSec": 90,
       "kind": "",
-      "start": 8,
+      "start": 12,
       "lo": 12,
       "hi": 20,
       "sec": false,
@@ -717,32 +780,36 @@ window.PROGRAMS = {
       "rest": "2 мин",
       "restSec": 120,
       "kind": "",
-      "start": 30,
+      "start": 35,
       "lo": 8,
       "hi": 12,
       "sec": false,
       "rirMin": 0,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "hint": "По желанию — с накладками на толстый гриф"
      },
      {
-      "name": "Разгибания на трицепс (канат)",
+      "name": "Разгибания на трицепс вниз (прямая рукоять)",
       "sets": 3,
       "reps": "10–15",
       "rir": "0–1",
       "rest": "2 мин",
       "restSec": 120,
       "kind": "",
-      "start": 40,
+      "start": 55,
       "lo": 10,
       "hi": 15,
       "sec": false,
       "rirMin": 0,
       "inc": 2.5,
-      "noWeight": false
+      "noWeight": false,
+      "aliases": [
+       "Разгибания на трицепс (канат)"
+      ]
      },
      {
-      "name": "Ролик для пресса",
+      "name": "Пресс (ролик или другое)",
       "sets": 3,
       "reps": "10–15",
       "rir": "1",
@@ -755,11 +822,664 @@ window.PROGRAMS = {
       "sec": false,
       "rirMin": 1,
       "inc": 2.5,
-      "noWeight": true
+      "noWeight": true,
+      "aliases": [
+       "Ролик для пресса"
+      ]
      }
     ]
    }
-  ]
+  ],
+  "schemes": {
+   "squat": {
+    "step": 2.5,
+    "restTop": 240,
+    "restBo": 180,
+    "acc": {
+     "top": [
+      5,
+      2
+     ],
+     "bo": {
+      "n": 3,
+      "reps": "5",
+      "lo": 5,
+      "hi": 5,
+      "rir": 3,
+      "drop": 0.09
+     }
+    },
+    "acc6": {
+     "top": [
+      5,
+      2
+     ],
+     "bo": {
+      "n": 2,
+      "reps": "5",
+      "lo": 5,
+      "hi": 5,
+      "rir": 3,
+      "drop": 0.09
+     }
+    },
+    "str": {
+     "top": [
+      3,
+      2
+     ],
+     "bo": {
+      "n": 3,
+      "reps": "6",
+      "lo": 6,
+      "hi": 6,
+      "rir": 2,
+      "drop": 0.08,
+      "cluster": "2+2+2",
+      "intra": 30
+     }
+    },
+    "peak13": {
+     "top": [
+      2,
+      2
+     ],
+     "singles": {
+      "n": 4,
+      "drop": 0.08,
+      "rest": 45
+     }
+    },
+    "peak14": {
+     "top": [
+      2,
+      1
+     ],
+     "singles": {
+      "n": 3,
+      "drop": 0.08,
+      "rest": 45
+     }
+    },
+    "taper": {
+     "top": [
+      1,
+      2
+     ],
+     "bo": {
+      "n": 2,
+      "reps": "2",
+      "lo": 2,
+      "hi": 2,
+      "rir": 3,
+      "drop": 0.1
+     }
+    },
+    "test": {
+     "test": true
+    }
+   },
+   "bench": {
+    "step": 1.25,
+    "restTop": 240,
+    "restBo": 180,
+    "acc": {
+     "top": [
+      5,
+      2
+     ],
+     "bo": {
+      "n": 3,
+      "reps": "5–6",
+      "lo": 5,
+      "hi": 6,
+      "rir": 2,
+      "drop": 0.07
+     }
+    },
+    "acc6": {
+     "top": [
+      5,
+      2
+     ],
+     "bo": {
+      "n": 2,
+      "reps": "5–6",
+      "lo": 5,
+      "hi": 6,
+      "rir": 2,
+      "drop": 0.07
+     }
+    },
+    "str": {
+     "top": [
+      3,
+      2
+     ],
+     "bo": {
+      "n": 3,
+      "reps": "4–5",
+      "lo": 4,
+      "hi": 5,
+      "rir": 2,
+      "drop": 0.07
+     }
+    },
+    "peak13": {
+     "top": [
+      2,
+      2
+     ],
+     "singles": {
+      "n": 4,
+      "drop": 0.05,
+      "rest": 45
+     }
+    },
+    "peak14": {
+     "top": [
+      2,
+      1
+     ],
+     "singles": {
+      "n": 3,
+      "drop": 0.05,
+      "rest": 45
+     }
+    },
+    "taper": {
+     "top": [
+      1,
+      2
+     ],
+     "bo": {
+      "n": 2,
+      "reps": "2",
+      "lo": 2,
+      "hi": 2,
+      "rir": 3,
+      "drop": 0.09
+     }
+    },
+    "test": {
+     "test": true
+    }
+   },
+   "dl": {
+    "step": 2.5,
+    "restTop": 240,
+    "restBo": 180,
+    "acc": {
+     "top": [
+      5,
+      2
+     ],
+     "bo": {
+      "n": 1,
+      "reps": "5",
+      "lo": 5,
+      "hi": 5,
+      "rir": 3,
+      "drop": 0.09
+     }
+    },
+    "acc6": {
+     "top": [
+      5,
+      2
+     ]
+    },
+    "str": {
+     "top": [
+      3,
+      2
+     ],
+     "bo": {
+      "n": 1,
+      "reps": "3",
+      "lo": 3,
+      "hi": 3,
+      "rir": 3,
+      "drop": 0.07
+     }
+    },
+    "peak13": {
+     "top": [
+      2,
+      2
+     ]
+    },
+    "peak14": {
+     "top": [
+      2,
+      1
+     ]
+    },
+    "taper": {
+     "top": [
+      1,
+      3
+     ],
+     "note": "Последняя тяжёлая становая — за 7–10 дней до теста."
+    },
+    "test": {
+     "test": true
+    }
+   },
+   "ohp": {
+    "step": 1,
+    "restTop": 180,
+    "restBo": 150,
+    "acc": {
+     "top": [
+      5,
+      2
+     ],
+     "bo": {
+      "n": 2,
+      "reps": "6–8",
+      "lo": 6,
+      "hi": 8,
+      "rir": 2,
+      "drop": 0.09
+     }
+    },
+    "acc6": {
+     "top": [
+      5,
+      2
+     ],
+     "bo": {
+      "n": 1,
+      "reps": "6–8",
+      "lo": 6,
+      "hi": 8,
+      "rir": 2,
+      "drop": 0.09
+     }
+    },
+    "str": {
+     "top": [
+      3,
+      2
+     ],
+     "bo": {
+      "n": 4,
+      "reps": "4",
+      "lo": 4,
+      "hi": 4,
+      "rir": 2,
+      "drop": 0.05,
+      "cluster": "2+2",
+      "intra": 25
+     }
+    },
+    "peak13": {
+     "top": [
+      2,
+      2
+     ],
+     "singles": {
+      "n": 4,
+      "drop": 0.04,
+      "rest": 45
+     }
+    },
+    "peak14": {
+     "top": [
+      2,
+      1
+     ],
+     "singles": {
+      "n": 3,
+      "drop": 0.04,
+      "rest": 45
+     }
+    },
+    "taper": {
+     "top": [
+      1,
+      2
+     ],
+     "bo": {
+      "n": 2,
+      "reps": "2",
+      "lo": 2,
+      "hi": 2,
+      "rir": 3,
+      "drop": 0.09
+     }
+    },
+    "test": {
+     "test": true
+    }
+   },
+   "pull": {
+    "step": 1.25,
+    "restTop": 180,
+    "restBo": 150,
+    "acc": {
+     "top": [
+      5,
+      2
+     ],
+     "bo": {
+      "n": 2,
+      "reps": "5–6",
+      "lo": 5,
+      "hi": 6,
+      "rir": 2,
+      "drop": 0.05
+     }
+    },
+    "acc6": {
+     "top": [
+      5,
+      2
+     ],
+     "bo": {
+      "n": 1,
+      "reps": "5–6",
+      "lo": 5,
+      "hi": 6,
+      "rir": 2,
+      "drop": 0.05
+     }
+    },
+    "str": {
+     "top": [
+      3,
+      2
+     ],
+     "bo": {
+      "n": 3,
+      "reps": "4",
+      "lo": 4,
+      "hi": 4,
+      "rir": 2,
+      "drop": 0.06,
+      "cluster": "2+2",
+      "intra": 30
+     }
+    },
+    "peak13": {
+     "top": [
+      2,
+      2
+     ],
+     "singles": {
+      "n": 3,
+      "drop": 0.03,
+      "rest": 45
+     }
+    },
+    "peak14": {
+     "top": [
+      2,
+      1
+     ]
+    },
+    "taper": {
+     "top": [
+      1,
+      2
+     ],
+     "bo": {
+      "n": 2,
+      "reps": "2",
+      "lo": 2,
+      "hi": 2,
+      "rir": 3,
+      "drop": 0.1
+     }
+    },
+    "test": {
+     "test": true
+    }
+   },
+   "pause": {
+    "step": 2.5,
+    "ref": "Присед со штангой",
+    "rest": 180,
+    "acc": {
+     "straight": {
+      "n": 3,
+      "reps": "3",
+      "lo": 3,
+      "hi": 3,
+      "rir": 3,
+      "pct": 0.72
+     }
+    },
+    "str": {
+     "straight": {
+      "n": 3,
+      "reps": "2",
+      "lo": 2,
+      "hi": 2,
+      "rir": 3,
+      "pct": 0.76
+     }
+    },
+    "peak13": {
+     "straight": {
+      "n": 2,
+      "reps": "2",
+      "lo": 2,
+      "hi": 2,
+      "rir": 3,
+      "pct": 0.78
+     }
+    },
+    "peak14": {
+     "straight": {
+      "n": 2,
+      "reps": "2",
+      "lo": 2,
+      "hi": 2,
+      "rir": 3,
+      "pct": 0.78
+     }
+    },
+    "taper": {
+     "straight": {
+      "n": 1,
+      "reps": "2",
+      "lo": 2,
+      "hi": 2,
+      "rir": 4,
+      "pct": 0.72
+     }
+    },
+    "test": null
+   },
+   "ohpLight": {
+    "step": 1,
+    "ref": "Жим штанги стоя",
+    "rest": 150,
+    "acc": {
+     "straight": {
+      "n": 3,
+      "reps": "3",
+      "lo": 3,
+      "hi": 3,
+      "rir": 4,
+      "pct": 0.74
+     }
+    },
+    "str": {
+     "straight": {
+      "n": 3,
+      "reps": "2",
+      "lo": 2,
+      "hi": 2,
+      "rir": 4,
+      "pct": 0.77
+     }
+    },
+    "peak13": {
+     "straight": {
+      "n": 2,
+      "reps": "2",
+      "lo": 2,
+      "hi": 2,
+      "rir": 3,
+      "pct": 0.78
+     }
+    },
+    "peak14": {
+     "straight": {
+      "n": 2,
+      "reps": "2",
+      "lo": 2,
+      "hi": 2,
+      "rir": 3,
+      "pct": 0.78
+     }
+    },
+    "taper": null,
+    "test": null
+   },
+   "dips": {
+    "step": 2.5,
+    "rest": 180,
+    "acc": {
+     "straight": {
+      "n": 3,
+      "reps": "6–8",
+      "lo": 6,
+      "hi": 8,
+      "rir": 2
+     }
+    },
+    "str": {
+     "straight": {
+      "n": 3,
+      "reps": "4–6",
+      "lo": 4,
+      "hi": 6,
+      "rir": 2
+     }
+    },
+    "peak13": {
+     "straight": {
+      "n": 3,
+      "reps": "3–4",
+      "lo": 3,
+      "hi": 4,
+      "rir": 2
+     }
+    },
+    "peak14": {
+     "straight": {
+      "n": 3,
+      "reps": "3",
+      "lo": 3,
+      "hi": 3,
+      "rir": 1
+     }
+    },
+    "taper": {
+     "straight": {
+      "n": 2,
+      "reps": "3",
+      "lo": 3,
+      "hi": 3,
+      "rir": 3
+     }
+    },
+    "test": {
+     "amrap": {
+      "w": 45
+     }
+    }
+   }
+  },
+  "block": {
+   "start": "2026-11-15",
+   "length": 16,
+   "plannedDeload": [
+    12
+   ],
+   "optionalDeload": [
+    6
+   ],
+   "weekPhase": [
+    "acc",
+    "acc",
+    "acc",
+    "acc",
+    "acc",
+    "acc6",
+    "str",
+    "str",
+    "str",
+    "str",
+    "str",
+    "str",
+    "peak13",
+    "peak14",
+    "taper",
+    "test"
+   ],
+   "phases": [
+    {
+     "from": 1,
+     "to": 5,
+     "name": "Накопление",
+     "note": "Топ-сет на 5 повторов с запасом 2, бэк-оффы обычными подходами на 5–10 % легче."
+    },
+    {
+     "from": 6,
+     "to": 6,
+     "name": "Разгрузка по самочувствию",
+     "note": "Есть признаки усталости — сделай неделю разгрузочной. Нет — тренируйся как на 5-й неделе, на бэк-офф меньше."
+    },
+    {
+     "from": 7,
+     "to": 11,
+     "name": "Сила",
+     "note": "Топ-сет на 3. Бэк-оффы приседа, жима стоя и подтягиваний — кластерами: короткие паузы внутри подхода."
+    },
+    {
+     "from": 12,
+     "to": 12,
+     "name": "Плановая разгрузка",
+     "note": "Половина подходов, вес на 10 % ниже, запас 4."
+    },
+    {
+     "from": 13,
+     "to": 14,
+     "name": "Пик",
+     "note": "Топ-сет на 2, затем одиночки с отдыхом 45 с. Подсобка — на подход меньше."
+    },
+    {
+     "from": 15,
+     "to": 15,
+     "name": "Подводка",
+     "note": "Объём −50 %, тяжёлая одиночка с запасом. Подсобки на ноги и спину нет."
+    },
+    {
+     "from": 16,
+     "to": 16,
+     "name": "Тест",
+     "note": "Одиночка с запасом 2, затем с запасом 1. Попытка максимума — только если вторая шла быстро. Устал — сделай неделю разгрузочной, тест сдвинется на неделю."
+    }
+   ],
+   "legend": [
+    "ТС — топ-сет: самый тяжёлый рабочий подход, всегда с запасом 2 (RPE 8). Вес на сегодня приложение считает по прошлому топ-сету.",
+    "Б1, Б2… — бэк-оффы: их вес считается от твоего сегодняшнего топ-сета, на 5–10 % легче.",
+    "Кластер 2+2+2 — один подход с паузами 20–30 с: 2 повтора, пауза, 2, пауза, 2. В «Повт.» пиши сумму, запас — по последнему блоку. Кнопка ⏱ запускает паузу.",
+    "О1, О2… — одиночки по 1 повтору с отдыхом 45 с. Р1… — подходы разгрузки. Т1–Т3 — тестовые одиночки.",
+    "Запас (RIR) пиши честно: от него зависит вес в следующий раз. В исследованиях люди чаще занижают запас примерно на 1 повтор, чем завышают.",
+    "Неделя совсем без тренировок не засчитывается: план ставится на паузу и продолжается с той же недели.",
+    "Плохо спал или устал — режим «Лёгкая». Накопилась усталость — «Разгрузка» на день или кнопка «Сделать неделю разгрузочной».",
+    "Внеплановая разгрузочная неделя сдвигает блок на неделю вперёд. Разгрузка на 6-й и 12-й неделе — по плану, блок не сдвигается."
+   ]
+  },
+  "features": {
+   "modes": true
+  }
  },
  "anya": {
   "who": "anya",

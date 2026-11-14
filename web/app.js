@@ -33,11 +33,11 @@ function bodyWeightOn(date) {
 }
 function e1(ex, s, bw) {
   if (!s || s.r == null) return null;
-  const rir = s.rir ?? 0;
-  if (s.r + rir > 12) return null;
-  if (ex.kind === "mainbw") return (bw + (s.w ?? 0)) * (1 + (s.r + rir) / 30);
+  const rir = s.rir ?? 0, r = s.cl ? Math.min(s.r, s.cl) : s.r; // кластер: считаем по мини-подходу
+  if (r + rir > 12) return null;
+  if (ex.kind === "mainbw") return (bw + (s.w ?? 0)) * (1 + (r + rir) / 30);
   if (s.w == null) return null;
-  return s.w * (1 + (s.r + rir) / 30);
+  return s.w * (1 + (r + rir) / 30);
 }
 function bestE1(ex, sets, date) {
   const bw = bodyWeightOn(date);
@@ -47,18 +47,26 @@ function bestE1(ex, sets, date) {
 }
 const sessionList = () => [...S.sessions.entries()].map(([id, v]) => ({ id, ...v })).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 const filled = s => s && (s.r != null || s.w != null);
+const short = n => String(n).replace(/\s*\(.*\)/, "");
+const namesOf = ex => [ex.name].concat(ex.aliases || []);
+function setsIn(s, ex) {
+  for (const n of namesOf(ex)) { const a = (s.sets?.[n] || []).filter(x => x && x.r != null); if (a.length) return a; }
+  return null;
+}
+const isRef = s => s.mode !== "deload" && s.phase !== "test"; // разгрузка и тест не влияют на расчёт весов
+function exByName(name) { for (const w of CFG.workouts) for (const e of w.exercises) if (e.name === name) return e; return null; }
 
 /* ---------- suggestion (double progression) ---------- */
-function lastFor(type, exName, beforeDate) {
+function lastFor(type, ex, beforeDate) {
   for (const s of sessionList()) {
-    if (s.type !== type || s.date >= beforeDate) continue;
-    const sets = (s.sets?.[exName] || []).filter(x => x && x.r != null);
-    if (sets.length) return { date: s.date, sets };
+    if (s.date >= beforeDate || (type && s.type !== type) || !isRef(s)) continue;
+    const sets = setsIn(s, ex);
+    if (sets) return { date: s.date, sets, mode: s.mode || "normal", phase: s.phase || null };
   }
   return null;
 }
 function suggest(ex, type, date) {
-  const last = lastFor(type, ex.name, date);
+  const last = lastFor(type, ex, date);
   if (ex.kind === "emom") {
     const R = ex.rounds || 10, P = ex.perRound || 8;
     if (!last) return { text: `Цель: ${R} раундов по ${P} повторов` };
@@ -84,6 +92,225 @@ function suggest(ex, type, date) {
   return { prev: last, w: top, text: `Тот же вес, цель ${ex.hi} в каждом подходе` };
 }
 
+/* ---------- 16-week block, modes, deload weeks ---------- */
+const MODES = [["normal", "Обычная"], ["light", "Лёгкая"], ["deload", "Разгрузка"]];
+const MODE_NAME = { normal: "обычная", light: "лёгкая", deload: "разгрузка" };
+const MODE_TXT = {
+  normal: "",
+  light: "Топ-сет с запасом 3, в каждом упражнении на подход меньше. Когда плохо спал, устал или мало времени.",
+  deload: "Половина подходов, вес на 10 % ниже, запас 3–4. При накопленной усталости, после болезни или когда ноют суставы.",
+};
+const RTS1 = [1, .955, .922, .892, .863]; // одиночка с запасом 0…4 — доля от максимума
+const NB = "\u00A0";
+const rnd = (x, st) => Math.round(x / st) * st;
+const rndDown = (x, st) => Math.floor(x / st + 1e-6) * st;
+const wAt = (e, reps, rir) => e / (1 + (reps + rir) / 30);
+const daysBetween = (a, b) => Math.round((toDate(b) - toDate(a)) / 86400000);
+const profile = () => Store.get("profile", "me") || {};
+function saveProfile(patch) { Store.write("profile", "me", { ...profile(), ...patch }, false); }
+const PH_FALLBACK = { acc6: "acc" };
+const phCfg = (sc, key) => !sc || !key ? null : key in sc ? sc[key] : PH_FALLBACK[key] ? sc[PH_FALLBACK[key]] : null;
+function phaseInfo(week) { return CFG.block.phases.find(p => week >= p.from && week <= p.to) || { name: "", note: "" }; }
+
+function blockInfo(date) {
+  const B = CFG.block; if (!B) return null;
+  const P = profile(), start = P.blockStart || B.start, L = B.length || 16;
+  const marks = new Set(P.deloadWeeks || []);
+  if (date < start) return { pre: true, start, week: 1, block: 1, phase: B.weekPhase[0], spanStart: start, spanEnd: addDays(start, 6), planned: false, optional: false, marked: false, extra: false, deload: false };
+  const span = Math.floor(daysBetween(start, date) / 7);
+  const used = new Set();
+  for (const s of S.sessions.values()) if (s.date >= start && s.date < addDays(start, 7 * span)) used.add(Math.floor(daysBetween(start, s.date) / 7));
+  let n = 0;
+  for (let k = 0; k < span; k++) {
+    const wk = n % L + 1;
+    if (B.plannedDeload.includes(wk) || B.optionalDeload.includes(wk)) { n++; continue; } // разгрузка засчитывается, даже если просто отдыхал
+    if (marks.has(addDays(start, 7 * k)) || !used.has(k)) continue; // внеплановая разгрузка или неделя без тренировок — пауза
+    n++;
+  }
+  const wk = n % L + 1, ss = addDays(start, 7 * span);
+  const planned = B.plannedDeload.includes(wk), optional = B.optionalDeload.includes(wk), marked = marks.has(ss);
+  return { pre: false, start, week: wk, block: Math.floor(n / L) + 1, phase: B.weekPhase[wk - 1], spanStart: ss, spanEnd: addDays(ss, 6), planned, optional, marked, extra: marked && !planned && !optional, deload: planned || marked };
+}
+function curMode(bi) { return S.cur.mode || (!S.cur.exists && bi?.deload ? "deload" : "normal"); }
+
+/* план основного упражнения на сегодня: топ-сет + бэк-оффы / одиночки / прямые подходы / тест */
+function planScheme(ex, ctx, i) {
+  const sc = CFG.schemes[ex.scheme], ph = phCfg(sc, ctx.phase);
+  if (!ph) return null;
+  const st = sc.step || ex.inc || 2.5, bwx = ex.kind === "mainbw", bw = bwx ? bodyWeightOn(ctx.date) : 0;
+  const mode = ctx.mode, light = mode === "light" ? 1 : 0;
+  const toEntry = tot => Math.max(0, rnd(tot - bw, st));
+  const scaleN = (w, f) => w == null ? null : Math.max(0, rnd((w + bw) * f - bw, st));
+  const scaleD = (w, f) => w == null ? null : Math.max(0, rndDown((w + bw) * f - bw, st));
+  const last = lastFor(null, ex, ctx.date);
+  const own = last ? { last, e: bestE1(ex, last.sets, last.date) } : null;
+  const lastTop = last ? Math.max(0, ...last.sets.map(s => s.w ?? 0)) : null;
+  const base = { st, bw, prev: last, note: ph.note || "" };
+  const rows = [];
+
+  if (ph.straight) {
+    const p = ph.straight; let n = p.n, rir = p.rir, w = null, info = "";
+    if (p.pct != null && sc.ref) {
+      const rx = exByName(sc.ref), rl = rx && lastFor(null, rx, ctx.date), re = rl && bestE1(rx, rl.sets, rl.date);
+      const pct = p.pct - .05 * light;
+      if (re) { w = Math.max(0, rndDown(re * pct - bw, st)); info = `${Math.round(pct * 100)} % от максимума в упражнении «${short(sc.ref)}» (≈${fmt(re)} кг)`; }
+      else if (ex.start != null) { w = ex.start; info = "Стартовый вес"; }
+    } else if (own?.e) {
+      const reps = Math.floor((p.lo + p.hi) / 2);
+      w = toEntry(wAt(own.e, reps, rir + light));
+      const same = mode === "normal" && last.mode === "normal" && phCfg(sc, last.phase)?.straight?.reps === p.reps;
+      if (same) w = Math.min(w + st, lastTop + 2 * st);
+      info = `Расчёт от ${dShort(last.date)}: максимум ≈${fmt(own.e)} кг${bwx ? " с весом тела" : ""}${same ? ", +шаг прогрессии" : ""}`;
+    } else if (ex.start != null) { w = ex.start; info = "Стартовый вес"; }
+    rir += light;
+    if (light) n = Math.max(1, n - 1);
+    if (mode === "deload") { n = Math.max(1, Math.ceil(n / 2)); w = scaleD(w, .9); rir = 4; }
+    for (let j = 0; j < n; j++) rows.push({ k: String(j + 1), role: "straight", reps: p.reps, rir, w, rest: sc.rest || ex.restSec });
+    return { ...base, rows, info, sugg: `${n} × ${esc(p.reps)}${w != null ? ` по <b>${fmtW(w)} кг</b>` : ""} с запасом ${rir}` };
+  }
+
+  if (ph.amrap && mode !== "deload") {
+    const start = profile().blockStart || CFG.block.start; let w = null;
+    for (const s of sessionList().slice().reverse()) {
+      if (s.date < start || s.date >= ctx.date || !isRef(s)) continue;
+      const a = setsIn(s, ex); if (a && a[0].w != null) { w = a[0].w; break; }
+    }
+    if (w == null) w = ph.amrap.w ?? ex.start ?? null;
+    rows.push({ k: "Т1", role: "amrap", reps: "макс.", rir: 0, w, rest: sc.rest || 180 });
+    return { ...base, rows, info: "Сравни с началом блока: тот же вес, больше повторов — значит сильнее.", sugg: `Тест: 1 подход на максимум повторов${w != null ? ` с <b>+${fmtW(w)} кг</b>` : ""}` };
+  }
+
+  if (ph.test && mode !== "deload") {
+    const e = own?.e, nT = light ? 1 : 3, RIRS = [2, 1, 0];
+    for (let j = 0; j < nT; j++) rows.push({ k: "Т" + (j + 1), role: "test", reps: "1", rir: RIRS[j], w: e ? toEntry(e * RTS1[RIRS[j]]) : null, rest: 300, opt: j === 2 });
+    return { ...base, rows, info: e ? `Максимум по последним тренировкам ≈${fmt(e)} кг${bwx ? " с весом тела" : ""}. Т2 и Т3 пересчитаются по тому, как прошла Т1.` : "",
+      sugg: `Тест: одиночка с запасом 2 → с запасом 1${nT > 2 ? " → попытка, только если вторая шла быстро" : ""}` };
+  }
+
+  const [tR, tRir0] = ph.top || [3, 2];
+  const tRir = tRir0 + light;
+  let topW = null, info = "";
+  if (own?.e) {
+    topW = toEntry(wAt(own.e, tR, tRir));
+    const same = mode === "normal" && last.mode === "normal" && phCfg(sc, last.phase)?.top?.[0] === tR;
+    if (same) topW = Math.min(topW + st, lastTop + 2 * st);
+    const cap = bwx ? rnd((lastTop + bw) * 1.12 - bw, st) : lastTop > 0 ? rnd(lastTop * 1.12, st) : null;
+    if (cap != null) topW = Math.min(topW, cap);
+    info = `Расчёт от ${dShort(last.date)}: максимум ≈${fmt(own.e)} кг${bwx ? " с весом тела" : ""}${same ? ", +шаг прогрессии" : ""}`;
+  } else if (ex.start != null) { topW = ex.start; info = "Стартовый вес"; }
+
+  if (mode === "deload") {
+    const n = Math.min(3, Math.max(1, Math.ceil((1 + (ph.bo?.n || 0) + (ph.singles?.n || 0)) / 2)));
+    const w = scaleD(topW, .9);
+    for (let j = 0; j < n; j++) rows.push({ k: "Р" + (j + 1), role: "deload", reps: String(tR), rir: 4, w, rest: sc.restBo || sc.restTop });
+    return { ...base, rows, info, sugg: `Разгрузка: ${n} × ${tR}${w != null ? ` по <b>${fmtW(w)} кг</b>` : ""} с запасом 4` };
+  }
+  rows.push({ k: "ТС", role: "top", reps: String(tR), rir: tRir, w: topW, rest: sc.restTop });
+  const bo = ph.bo, sg = ph.singles;
+  if (bo) for (let j = 0; j < Math.max(0, bo.n - light); j++) rows.push({ k: "Б" + (j + 1), role: "bo", reps: bo.reps, rir: bo.rir, drop: bo.drop, w: scaleN(topW, 1 - bo.drop), rest: sc.restBo, cluster: bo.cluster || null, intra: bo.intra || null });
+  if (sg) for (let j = 0; j < Math.max(0, sg.n - light); j++) rows.push({ k: "О" + (j + 1), role: "single", reps: "1", rir: 3, drop: sg.drop, w: scaleN(topW, 1 - sg.drop), rest: sg.rest });
+  const dep = rows.find(r => r.drop != null);
+  const depName = dep ? (dep.role === "single" ? "одиночки" : dep.cluster ? "кластеры" : "бэк-оффы") : "";
+  if (dep?.cluster) { const m = dep.cluster.split("+"); base.note = [`Кластер ${dep.cluster}: ${m.map(x => x).join(` → пауза ${dep.intra}${NB}с → `)}. В «Повт.» пиши сумму (${dep.reps}), запас — после последних${NB}${m[m.length - 1]}.`, base.note].filter(Boolean).join(" "); }
+  return { ...base, rows, info,
+    sugg: `ТС <b>${topW != null ? fmtW(topW) + NB + "кг" : "—"}</b> × ${tR} с запасом ${tRir}` + (dep ? ` · ${depName} <b id="dep-${i}">${dep.w != null ? fmtW(dep.w) + NB + "кг" : "—"}</b> (−${Math.round(dep.drop * 100)}${NB}%)` : "") };
+}
+
+/* план подсобного упражнения (и всех упражнений программы без блока) */
+function planAcc(ex, ctx) {
+  const em = ex.kind === "emom", R = ex.rounds || 10, P = ex.perRound || 8;
+  let n = em ? 1 : ex.sets, hidden = false, rir = ex.rirMin, rirTxt = ex.rir, factor = 1;
+  if (ctx.blk) {
+    const ph = ctx.phase;
+    if (ph === "test" && !ex.keepTest) hidden = true;
+    if (ph === "taper") { if (ex.taper === "skip") hidden = true; else if (!em) n = Math.ceil(n / 2); }
+    if ((ph === "peak13" || ph === "peak14") && !em) n = Math.max(1, n - 1);
+    if (ctx.mode === "light" && !em) n = Math.max(1, n - 1);
+    if (ctx.mode === "deload") { if (!em) n = Math.max(1, Math.ceil(n / 2)); factor = .9; rir = Math.max(3, rir ?? 3); rirTxt = "3–4"; }
+  }
+  const sg = suggest(ex, ctx.type, ctx.date);
+  let w = sg.w ?? null;
+  if (w != null && factor !== 1) w = rndDown(w * factor, ex.inc || 2.5);
+  const reps = em ? String(ctx.mode === "deload" && ctx.blk ? Math.round(R * P / 2) : R * P) : ex.lo != null ? `${ex.lo}–${ex.hi}` : "";
+  const rows = [...Array(n)].map((_, s) => ({ k: String(s + 1), role: "set", reps, rir, w, rest: ex.restSec }));
+  const dl = ctx.blk && ctx.mode === "deload";
+  const txt = !dl ? sg.text : em ? `Разгрузка: ${reps} повторов за ${R} мин` : ex.noWeight ? "Разгрузка: половина подходов, запас 3–4" : "Разгрузка: вес −10\u00A0%, половина подходов, запас 3–4";
+  const sugg = `${w != null ? `Сегодня: <b>${fmtW(w)}${NB}кг</b> · ` : ""}${esc(txt)}`;
+  return { rows, sugg, info: "", prev: sg.prev || null, hidden, rirTxt };
+}
+
+function planFor(ex, i, ctx, cur) {
+  const stored = cur.sets[ex.name] || [];
+  const nStored = stored.reduce((m, x, k) => (x && (filled(x) || x.done) ? k + 1 : m), 0);
+  let p = ctx.blk && ex.scheme ? planScheme(ex, ctx, i) : planAcc(ex, ctx);
+  if (!p) p = { rows: [], hidden: true, sugg: "", info: "" };
+  if (p.hidden && nStored) p.hidden = false; // уже записанное не прячем
+  while (p.rows.length < nStored) p.rows.push({ k: String(p.rows.length + 1), role: "extra", reps: "", rir: null, w: null, rest: ex.restSec || 120 });
+  const it = { ex, i, ...p, counted: !p.hidden && !ex.optional };
+  recalcDeps(it, stored);
+  return it;
+}
+/* бэк-оффы считаются от сегодняшнего топ-сета, тестовые одиночки — от первой */
+function recalcDeps(it, arr) {
+  const r0 = it.rows[0]; if (!r0) return;
+  const bw = it.bw || 0, st = it.st || 2.5;
+  if (r0.role === "top") {
+    const base = arr[0]?.w ?? r0.w;
+    it.rows.forEach(r => { if (r.drop != null) r.w = base == null ? null : Math.max(0, rnd((base + bw) * (1 - r.drop) - bw, st)); });
+  }
+  if (r0.role === "test") {
+    const w1 = arr[0]?.w, rir1 = arr[0]?.rir;
+    if (w1 == null || rir1 == null || rir1 < 0 || rir1 > 4) return;
+    const e = (w1 + bw) / RTS1[Math.round(rir1)];
+    it.rows.forEach((r, s) => { if (s > 0 && r.role === "test") r.w = Math.max(0, rnd(e * RTS1[r.rir] - bw, st)); });
+  }
+}
+function planText(it) {
+  const ex = it.ex, rs = it.rows.filter(r => r.role !== "extra");
+  if (CFG.block && ex.scheme) {
+    const g = [], by = role => rs.filter(r => r.role === role);
+    const top = by("top")[0]; if (top) g.push(`ТС ×${top.reps}`);
+    const bo = by("bo"); if (bo.length) g.push(`${bo.length} × ${bo[0].cluster ? "(" + bo[0].cluster + ")" : bo[0].reps}`);
+    const sg = by("single"); if (sg.length) g.push(`${sg.length} × 1`);
+    const str = by("straight").concat(by("deload")); if (str.length) g.push(`${str.length} × ${str[0].reps}`);
+    const ts = by("test"); if (ts.length) g.push(`тест ${ts.length} × 1`);
+    if (by("amrap").length) g.push("1 × макс.");
+    return esc(g.join(" + ") + " · " + ex.rest);
+  }
+  return `${ex.kind === "emom" ? (ex.rounds || 10) + " мин × " + (ex.perRound || 8) : rs.length + " × " + esc(ex.reps)} · RIR ${esc(it.rirTxt ?? ex.rir)} · ${esc(ex.rest)}`;
+}
+
+function fatigueSigns(date) {
+  const out = [];
+  const days = [0, 1, 2].map(k => S.daily.get(addDays(date, -k)) || {});
+  if (days.every(x => x.sleep != null && x.sleep < 7)) out.push("сон меньше 7 ч три ночи подряд");
+  if (days.filter(x => (x.energy != null && x.energy <= 2) || (x.fresh != null && x.fresh <= 2)).length >= 2) out.push("низкая энергия или тяжёлые мышцы 2 дня из 3");
+  CFG.workouts.forEach(w => w.exercises.forEach(ex => {
+    if (!ex.scheme || !(ex.kind === "main" || ex.kind === "mainbw")) return;
+    const pts = sessionList().filter(s => s.date < date && s.date >= addDays(date, -42) && isRef(s))
+      .map(s => { const a = setsIn(s, ex); return a ? bestE1(ex, a, s.date) : null; }).filter(v => v != null);
+    if (pts.length < 3) return;
+    const [a, b, ...rest] = pts, best = Math.max(...rest);
+    if (a <= best * .95 && b <= best * .95) out.push(`${short(ex.name).toLowerCase()}: расчётный максимум ниже лучшего на ${Math.round((1 - Math.max(a, b) / best) * 100)} % две тренировки подряд`);
+  }));
+  return out;
+}
+function blockBanner(bi, cur) {
+  const B = CFG.block;
+  if (bi.pre) return `<div class="banner blk"><div class="blk-t">Блок 16 недель стартует ${dShort(bi.start)}</div><div class="small">До старта приложение показывает план 1-й недели.</div>${cur.date >= today() ? `<button type="button" class="btn small" data-blockstart="${cur.date}">Начать блок с ${dShort(cur.date)}</button>` : ""}</div>`;
+  const ph = phaseInfo(bi.week);
+  const title = bi.extra ? `Внеплановая разгрузка · потом неделя ${bi.week}` : `Неделя ${bi.week} из ${B.length}${bi.block > 1 ? ` · блок ${bi.block}` : ""} · ${bi.optional && bi.marked ? "Разгрузка" : ph.name}`;
+  const note = bi.extra ? "Половина подходов, вес на 10 % ниже. План стоит на паузе и продолжится со следующей недели." : bi.optional && bi.marked ? "Половина подходов, вес на 10 % ниже, запас 4." : ph.note;
+  const btn = bi.planned ? "" : `<button type="button" class="btn small" data-dlweek="${bi.spanStart}">${bi.marked ? "Отменить разгрузочную неделю" : "Сделать эту неделю разгрузочной"}</button>`;
+  return `<div class="banner blk"><div class="blk-t">${esc(title)}</div><div class="small">${esc(note)} <span class="muted">${dShort(bi.spanStart)}–${dShort(bi.spanEnd)}</span></div>${btn}</div>`;
+}
+function fatigueBanner(date) {
+  if (date < addDays(today(), -1)) return "";
+  const f = fatigueSigns(date); if (!f.length) return "";
+  const adv = f.length >= 2 ? "Похоже на накопленную усталость: сегодня выбери «Разгрузка», а если так и на следующей тренировке — сделай неделю разгрузочной." : "Если чувствуешь себя разбитым — выбери «Лёгкая».";
+  return `<div class="banner warn"><b>Признаки усталости:</b> ${esc(f.join("; "))}. ${esc(adv)}</div>`;
+}
+
 /* ---------- current session ---------- */
 function nextType() {
   const list = sessionList().filter(s => ORDER.includes(s.type));
@@ -94,7 +321,7 @@ function nextType() {
 function openSession(type, date) {
   const id = `${date}_${SLUG[type] || type}`;
   const ex = S.sessions.get(id);
-  S.cur = { id, type, date, sets: JSON.parse(JSON.stringify(ex?.sets || {})), notes: ex?.notes || "", stamp: ex?.updatedAt || 0, exists: !!ex };
+  S.cur = { id, type, date, sets: JSON.parse(JSON.stringify(ex?.sets || {})), notes: ex?.notes || "", stamp: ex?.updatedAt || 0, exists: !!ex, mode: ex?.mode || null };
   S.dirty = false;
 }
 function initCurrent() {
@@ -107,7 +334,7 @@ function initCurrent() {
 function compactSets(sets) {
   const out = {};
   for (const [k, arr] of Object.entries(sets)) {
-    const a = (arr || []).map(s => s ? { w: s.w ?? null, r: s.r ?? null, rir: s.rir ?? null, done: !!s.done } : null);
+    const a = (arr || []).map(s => s ? Object.assign({ w: s.w ?? null, r: s.r ?? null, rir: s.rir ?? null, done: !!s.done }, s.k ? { k: s.k } : {}, s.cl ? { cl: s.cl } : {}) : null);
     while (a.length && (!a[a.length - 1] || (!filled(a[a.length - 1]) && !a[a.length - 1].done))) a.pop();
     if (a.length) out[k] = a.map(s => s || { w: null, r: null, rir: null, done: false });
   }
@@ -127,9 +354,13 @@ async function flush() {
   if (!S.cur.exists && !Object.keys(sets).length && !S.cur.notes.trim()) { S.dirty = false; setStatus("Сохранено", "ok"); return; }
   S.saving = true; S.dirty = false;
   const body = { type: S.cur.type, date: S.cur.date, sets, notes: S.cur.notes, updatedAt: Date.now() };
+  if (CFG.block) {
+    const bi = blockInfo(S.cur.date);
+    Object.assign(body, { mode: curMode(bi), week: bi.pre ? 0 : bi.week, phase: bi.phase }, bi.block > 1 ? { block: bi.block } : {}, bi.extra ? { extra: true } : {});
+  }
   try {
     await writeDoc("sessions/" + S.cur.id, body);
-    S.cur.exists = true; S.cur.stamp = body.updatedAt;
+    S.cur.exists = true; S.cur.stamp = body.updatedAt; if (body.mode) S.cur.mode = body.mode;
     Sync.show();
   } catch (e) {
     S.dirty = true; setStatus("Не сохранилось", "bad");
@@ -150,65 +381,85 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) flush
 window.addEventListener("pagehide", flush);
 
 /* ---------- train view ---------- */
+const isCounted = r => !r.opt && r.role !== "extra";
+function countDone() {
+  return S.plan.items.filter(it => it.counted).reduce((a, it) => a + it.rows.reduce((b, r, s) => b + (isCounted(r) && S.cur.sets[it.ex.name]?.[s]?.done ? 1 : 0), 0), 0);
+}
 function renderTrain() {
   const v = $("#view-train");
   if (!S.cur) initCurrent();
   const cur = S.cur, w = WMAP[cur.type], nx = nextType();
-  const total = w.exercises.reduce((a, e) => a + e.sets, 0);
-  const done = w.exercises.reduce((a, e) => a + (cur.sets[e.name] || []).filter(s => s && s.done).length, 0);
+  const bi = CFG.block ? blockInfo(cur.date) : null;
+  const mode = bi ? curMode(bi) : "normal";
+  const ctx = { type: cur.type, date: cur.date, blk: bi, phase: bi?.phase, mode };
+  S.plan = { ctx, items: w.exercises.map((ex, i) => planFor(ex, i, ctx, cur)) };
+  const total = S.plan.items.filter(it => it.counted).reduce((a, it) => a + it.rows.filter(isCounted).length, 0);
   let h = `<div class="card">
     <div class="seg" role="group" aria-label="Тренировка">${ORDER.map(k => `<button type="button" data-type="${esc(k)}" aria-pressed="${k === cur.type}">${esc(k)}${k === nx && !cur.exists ? '<span class="nx">по циклу</span>' : ""}</button>`).join("")}</div>
     <div class="row"><div class="field" style="flex:1"><label class="label" for="t-date">Дата</label><input type="date" id="t-date" value="${cur.date}"></div>
-    <div class="field" style="flex:2"><span class="label">${esc(w.title)}</span><span class="small muted">Сделано подходов: <b id="done-count">${done}</b> из ${total}${cur.exists ? "" : " · новая тренировка"}</span></div></div>
+    <div class="field" style="flex:2"><span class="label">${esc(w.title)}</span><span class="small muted">Сделано подходов: <b id="done-count">${countDone()}</b> из ${total}${cur.exists ? "" : " · новая тренировка"}</span></div></div>
+    ${bi ? `<div class="seg seg3" role="group" aria-label="Режим тренировки">${MODES.map(([k, l]) => `<button type="button" data-mode="${k}" aria-pressed="${k === mode}">${l}</button>`).join("")}</div>${MODE_TXT[mode] ? `<p class="small muted mode-txt">${MODE_TXT[mode]}</p>` : ""}` : ""}
   </div>`;
-  w.exercises.forEach((ex, i) => { h += exCard(ex, i, cur); });
+  if (bi) h += blockBanner(bi, cur) + fatigueBanner(cur.date);
+  S.plan.items.forEach(it => { if (!it.hidden) h += exCard(it, cur); });
+  const hid = S.plan.items.filter(it => it.hidden).map(it => short(it.ex.name));
+  if (hid.length) h += `<p class="small muted">На этой неделе по плану не делаем: ${esc(hid.join(", "))}.</p>`;
   h += `<div class="card"><label class="label" for="t-notes">Заметки: самочувствие, замены, техника</label><textarea id="t-notes">${esc(cur.notes)}</textarea></div>`;
   v.innerHTML = h;
 }
-function exCard(ex, i, cur) {
-  const sg = suggest(ex, cur.type, cur.date);
+function exCard(it, cur) {
+  const { ex, i, rows } = it;
   const sets = cur.sets[ex.name] || [];
   const nw = ex.noWeight;
-  const prev = sg.prev ? `<div class="prev">Прошлый раз ${dShort(sg.prev.date)}: ${sg.prev.sets.map(s => (nw || s.w == null ? "" : fmtW(s.w) + "×") + s.r + (s.rir != null ? `<span class="muted">@${s.rir}</span>` : "")).join(" · ")}</div>` : "";
-  const wHint = sg.w != null ? fmtW(sg.w) : "";
+  const pv = it.prev;
+  const prev = pv ? `<div class="prev">Прошлый раз ${dShort(pv.date)}${pv.mode && pv.mode !== "normal" ? ` (${MODE_NAME[pv.mode]})` : ""}: ${pv.sets.map(s => (s.k && isNaN(+s.k) ? `<span class="muted">${esc(s.k)}</span> ` : "") + (nw || s.w == null ? "" : fmtW(s.w) + "×") + s.r + (s.rir != null ? `<span class="muted">@${s.rir}</span>` : "")).join(" · ")}</div>` : "";
   const isMain = ex.kind === "main" || ex.kind === "mainbw";
   const e1v = isMain ? bestE1(ex, sets, cur.date) : null;
-  const n = ex.kind === "emom" ? 1 : ex.sets;
   const repLbl = ex.kind === "emom" ? "Всего" : ex.sec ? "Сек" : "Повт.";
   const wLbl = ex.kind === "mainbw" || ex.kind === "emom" || /доп/.test(ex.name) ? "+кг" : "Кг";
-  let rows = `<div class="set-hdr${nw ? " nw" : ""}"><span>#</span>${nw ? "" : `<span>${wLbl}</span>`}<span>${repLbl}</span><span>RIR</span><span></span></div>`;
-  for (let s = 0; s < n; s++) {
+  let h = `<div class="set-hdr${nw ? " nw" : ""}"><span>#</span>${nw ? "" : `<span>${wLbl}</span>`}<span>${repLbl}</span><span>RIR</span><span></span></div>`;
+  rows.forEach((r, s) => {
     const st = sets[s] || {};
-    rows += `<div class="set${nw ? " nw" : ""}${st.done ? " done" : ""}" data-ex="${i}" data-s="${s}">
-      <span class="n">${s + 1}</span>
-      ${nw ? "" : `<input id="w-${i}-${s}" data-f="w" inputmode="decimal" aria-label="Вес, подход ${s + 1}" value="${st.w != null ? fmtW(st.w) : ""}" placeholder="${wHint}">`}
-      <input id="r-${i}-${s}" data-f="r" inputmode="numeric" aria-label="Повторы, подход ${s + 1}" value="${st.r ?? ""}" placeholder="${ex.kind === "emom" ? String((ex.rounds || 10) * (ex.perRound || 8)) : (ex.lo != null ? ex.lo + "–" + ex.hi : "")}">
-      <input id="i-${i}-${s}" data-f="rir" inputmode="numeric" aria-label="Запас, подход ${s + 1}" value="${st.rir ?? ""}" placeholder="${ex.rirMin ?? ""}">
-      <button type="button" class="tick" data-tick aria-pressed="${!!st.done}" aria-label="Подход ${s + 1} сделан">✓</button>
+    const lbl = r.role === "set" || r.role === "extra" ? `подход ${s + 1}` : r.k;
+    h += `<div class="set${nw ? " nw" : ""}${st.done ? " done" : ""}${r.role === "top" || r.role === "test" || r.role === "amrap" ? " top" : ""}" data-ex="${i}" data-s="${s}">
+      <span class="n${r.k.length > 1 ? " k" : ""}">${esc(r.k)}</span>
+      ${nw ? "" : `<input id="w-${i}-${s}" data-f="w" inputmode="decimal" aria-label="Вес, ${lbl}" value="${st.w != null ? fmtW(st.w) : ""}" placeholder="${r.w != null ? fmtW(r.w) : ""}">`}
+      <input id="r-${i}-${s}" data-f="r" inputmode="numeric" aria-label="Повторы, ${lbl}" value="${st.r ?? ""}" placeholder="${esc(r.reps ?? "")}">
+      <input id="i-${i}-${s}" data-f="rir" inputmode="numeric" aria-label="Запас, ${lbl}" value="${st.rir ?? ""}" placeholder="${r.rir ?? ""}">
+      <button type="button" class="tick" data-tick aria-pressed="${!!st.done}" aria-label="${esc(lbl)} сделан">✓</button>
     </div>`;
-  }
-  const allDone = n > 0 && sets.filter(x => x && x.done).length >= n;
+    if (r.cluster) h += `<div class="cl-line"><button type="button" class="btn small" data-intra="${r.intra}" aria-label="Пауза внутри кластера ${r.intra} секунд">⏱ пауза ${r.intra} с</button></div>`;
+  });
+  const allDone = rows.length > 0 && rows.every((r, s) => !isCounted(r) || sets[s]?.done);
   return `<article class="card ex${allDone ? " done-all" : ""}" id="ex-${i}">
-    <div class="ex-head"><h3>${esc(ex.name)}${ex.hint ? `<span class="hint">${esc(ex.hint)}</span>` : ""}</h3><span class="plan">${ex.kind === "emom" ? (ex.rounds || 10) + " мин × " + (ex.perRound || 8) : ex.sets + " × " + esc(ex.reps)} · RIR ${esc(ex.rir)} · ${esc(ex.rest)}</span></div>
+    <div class="ex-head"><h3>${esc(ex.name)}${ex.optional ? ' <span class="tag">по желанию</span>' : ""}${ex.hint ? `<span class="hint">${esc(ex.hint)}</span>` : ""}</h3><span class="plan">${planText(it)}</span></div>
     ${prev}
-    <div class="sugg">${sg.w != null ? `Сегодня: <b>${fmtW(sg.w)} кг</b> · ` : ""}${esc(sg.text)}</div>
-    <div class="sets">${rows}</div>
+    <div class="sugg">${it.sugg}${it.info ? `<span class="sugg-src">${esc(it.info)}</span>` : ""}</div>
+    ${it.note ? `<div class="small muted">${esc(it.note)}</div>` : ""}
+    <div class="sets">${h}</div>
     ${isMain ? `<div class="e1" id="e1-${i}">e1RM сегодня: ${e1v ? fmt(e1v) + " кг" : "—"}${ex.kind === "mainbw" ? " (вес тела + доп.)" : ""}</div>` : ""}
   </article>`;
 }
-function updateCounts() {
-  const w = WMAP[S.cur.type];
-  const done = w.exercises.reduce((a, e) => a + (S.cur.sets[e.name] || []).filter(s => s && s.done).length, 0);
-  const el = $("#done-count"); if (el) el.textContent = done;
+function updateCounts() { const el = $("#done-count"); if (el) el.textContent = countDone(); }
+const TAGGED = new Set(["top", "bo", "single", "deload", "test", "amrap"]);
+function tagSet(st, r) { if (!r) return; if (TAGGED.has(r.role)) st.k = r.k; if (r.cluster) st.cl = +String(r.cluster).split("+")[0]; }
+function refreshDeps(i) {
+  const it = S.plan.items[i]; if (!it) return;
+  recalcDeps(it, S.cur.sets[it.ex.name] || []);
+  it.rows.forEach((r, s) => { if (s === 0 || (r.drop == null && r.role !== "test")) return; const inp = $(`#w-${i}-${s}`); if (inp) inp.placeholder = r.w != null ? fmtW(r.w) : ""; });
+  const dep = it.rows.find(r => r.drop != null), el = $("#dep-" + i);
+  if (dep && el) el.textContent = dep.w != null ? fmtW(dep.w) + NB + "кг" : "—";
 }
 $("#view-train").addEventListener("input", e => {
   const t = e.target; S.touched = true;
   if (t.id === "t-notes") { S.cur.notes = t.value; scheduleSave(); return; }
   const row = t.closest(".set"); if (!row) return;
-  const i = +row.dataset.ex, s = +row.dataset.s, ex = WMAP[S.cur.type].exercises[i];
+  const i = +row.dataset.ex, s = +row.dataset.s, it = S.plan.items[i], ex = it.ex, r = it.rows[s];
   const arr = S.cur.sets[ex.name] || (S.cur.sets[ex.name] = []);
   arr[s] = arr[s] || {};
   arr[s][t.dataset.f] = num(t.value);
+  tagSet(arr[s], r);
+  if (s === 0 && (r?.role === "top" || r?.role === "test")) refreshDeps(i);
   if (ex.kind === "main" || ex.kind === "mainbw") {
     const v = bestE1(ex, arr, S.cur.date); const el = $("#e1-" + i);
     if (el) el.textContent = `e1RM сегодня: ${v ? fmt(v) + " кг" : "—"}${ex.kind === "mainbw" ? " (вес тела + доп.)" : ""}`;
@@ -222,10 +473,23 @@ $("#view-train").addEventListener("click", e => {
   if (e.target.closest("button")) S.touched = true;
   const tb = e.target.closest("[data-type]");
   if (tb) { flush(); openSession(tb.dataset.type, S.cur.date); renderTrain(); window.scrollTo(0, 0); return; }
+  const mb = e.target.closest("[data-mode]");
+  if (mb) { S.cur.mode = mb.dataset.mode; if (S.cur.exists) scheduleSave(); renderTrain(); return; }
+  const dw = e.target.closest("[data-dlweek]");
+  if (dw) {
+    const set = new Set(profile().deloadWeeks || []), k = dw.dataset.dlweek;
+    if (set.has(k)) set.delete(k); else set.add(k);
+    if (!S.cur.exists) S.cur.mode = null;
+    saveProfile({ deloadWeeks: [...set].sort() }); renderTrain(); return;
+  }
+  const bs = e.target.closest("[data-blockstart]");
+  if (bs) { saveProfile({ blockStart: bs.dataset.blockstart }); renderTrain(); return; }
+  const ib = e.target.closest("[data-intra]");
+  if (ib) { unlockAudio(); startTimer(+ib.dataset.intra, "пауза внутри кластера"); return; }
   const tick = e.target.closest("[data-tick]"); if (!tick) return;
   unlockAudio(); keepAwake();
   const row = tick.closest(".set"); const i = +row.dataset.ex, s = +row.dataset.s;
-  const ex = WMAP[S.cur.type].exercises[i];
+  const it = S.plan.items[i], ex = it.ex, r = it.rows[s] || {};
   const arr = S.cur.sets[ex.name] || (S.cur.sets[ex.name] = []);
   arr[s] = arr[s] || {};
   const st = arr[s];
@@ -233,11 +497,13 @@ $("#view-train").addEventListener("click", e => {
   if (st.done) {
     const wi = $(`#w-${i}-${s}`); if (wi && st.w == null && wi.placeholder) { st.w = num(wi.placeholder); wi.value = wi.placeholder; }
     const ri = $(`#i-${i}-${s}`); if (ri && st.rir == null && ri.placeholder !== "") { st.rir = num(ri.placeholder); ri.value = ri.placeholder; }
-    if (ex.restSec) startTimer(ex.restSec, `${ex.name} · подход ${s + 1} из ${ex.kind === "emom" ? 1 : ex.sets}`);
+    tagSet(st, r);
+    if (s === 0 && (r.role === "top" || r.role === "test")) refreshDeps(i);
+    const rest = r.rest ?? ex.restSec;
+    if (rest) startTimer(rest, `${ex.name} · ${r.role === "set" || r.role === "extra" ? `подход ${s + 1} из ${it.rows.length}` : r.k}`);
   }
   row.classList.toggle("done", st.done); tick.setAttribute("aria-pressed", st.done);
-  const card = $("#ex-" + i), n = ex.kind === "emom" ? 1 : ex.sets;
-  card.classList.toggle("done-all", arr.filter(x => x && x.done).length >= n);
+  $("#ex-" + i).classList.toggle("done-all", it.rows.length > 0 && it.rows.every((q, k) => !isCounted(q) || arr[k]?.done));
   updateCounts(); scheduleSave();
 });
 
@@ -453,7 +719,7 @@ function renderProgress() {
   CFG.workouts.forEach(w => w.exercises.forEach(ex => { if (ex.kind === "main" || ex.kind === "mainbw") mains.push({ ex, type: w.key }); }));
   h += `<div class="card"><h2>Силовые: расчётный максимум</h2><p class="small muted">Лучший подход каждой тренировки по формуле e1RM. Сравнивай только с собой в одном упражнении.</p><div class="lifts">`;
   mains.forEach(({ ex, type }) => {
-    const pts = sessionList().filter(s => s.type === type).reverse().map(s => ({ d: s.date, y: bestE1(ex, s.sets?.[ex.name], s.date) })).filter(p => p.y != null);
+    const pts = sessionList().filter(s => s.type === type && s.mode !== "deload").reverse().map(s => ({ d: s.date, y: bestE1(ex, s.sets?.[ex.name], s.date) })).filter(p => p.y != null);
     const last = pts[pts.length - 1], first = pts[0];
     h += `<div class="card lift"><span class="small"><b>${esc(ex.name.replace(/\s*\(.*\)/, ""))}</b></span><span class="v">${last ? fmt(last.y) + " кг" : "—"}</span>
       <span class="small muted">${pts.length > 1 ? (last.y - first.y >= 0 ? "+" : "") + fmt(last.y - first.y) + " кг с " + dShort(first.d) : pts.length ? "одна тренировка" : "нет записей"}</span>${spark(pts)}</div>`;
@@ -475,7 +741,8 @@ function renderHistory() {
     const w = WMAP[s.type]; let n = 0, best = [];
     Object.values(s.sets || {}).forEach(arr => { n += arr.filter(x => x && x.r != null).length; });
     w?.exercises.forEach(ex => { if (ex.kind === "main" || ex.kind === "mainbw") { const b = bestE1(ex, s.sets?.[ex.name], s.date); if (b) best.push(`${ex.name.replace(/\s*\(.*\)/, "")} ${fmt(b)}`); } });
-    return `<div class="card"><div class="hist-item"><div><div class="t">${esc(s.type)} · ${dShort(s.date)}</div><div class="small muted">${n} подходов${best.length ? " · e1RM " + esc(best.join(", ")) : ""}${s.notes ? " · " + esc(s.notes.slice(0, 80)) : ""}</div></div>
+    const tags = (s.week ? ` · нед. ${s.week}` : "") + (s.mode && s.mode !== "normal" ? ` · ${MODE_NAME[s.mode] || s.mode}` : "");
+    return `<div class="card"><div class="hist-item"><div><div class="t">${esc(s.type)} · ${dShort(s.date)}<span class="small muted">${esc(tags)}</span></div><div class="small muted">${n} подходов${best.length ? " · e1RM " + esc(best.join(", ")) : ""}${s.notes ? " · " + esc(s.notes.slice(0, 80)) : ""}</div></div>
       <div class="row"><button type="button" class="btn" data-open="${esc(s.id)}">Открыть</button><button type="button" class="btn danger" data-dels="${esc(s.id)}">${S.delArm === "s" + s.id ? "Удалить?" : "Удалить"}</button></div></div></div>`;
   }).join("");
 }
@@ -497,10 +764,48 @@ function renderProgram() {
   const v = $("#view-program");
   const tg = CFG.who === "anya" ? `Калории ${CFG.kcal} (перед месячными ${CFG.kcalPms}) · белок ${CFG.protein} г · шаги ${CFG.steps}` : `Калории ~${CFG.kcal} (корректируется по темпу набора) · белок от ${CFG.protein} г`;
   let h = `<div class="card"><h2>Цель</h2><p>${esc(CFG.goal)}</p><p class="small muted">${esc(tg)}</p><ul class="rules">${CFG.rules.map(r => `<li>${esc(r)}</li>`).join("")}</ul></div>`;
+  const bi = CFG.block ? blockInfo(today()) : null;
+  if (bi) h += blockOverview(bi);
   CFG.workouts.forEach(w => {
-    h += `<div class="card"><h2>${esc(w.key)}</h2><p class="small muted">${esc(w.title)}</p><div class="tbl-wrap"><table class="prog-tbl"><thead><tr><th>Упражнение</th><th>Подх. × повт.</th><th>RIR</th><th>Отдых</th></tr></thead><tbody>${w.exercises.map(ex => `<tr><td style="white-space:normal">${esc(ex.name)}${ex.hint ? `<span class="hint">${esc(ex.hint)}</span>` : ""}</td><td>${ex.sets} × ${esc(ex.reps)}</td><td>${esc(ex.rir)}</td><td>${esc(ex.rest)}</td></tr>`).join("")}</tbody></table></div></div>`;
+    h += `<div class="card"><h2>${esc(w.key)}</h2><p class="small muted">${esc(w.title)}${bi ? ` · схема основных — на ${bi.pre ? "1-й неделе" : "этой неделе"}` : ""}</p><div class="tbl-wrap"><table class="prog-tbl"><thead><tr><th>Упражнение</th><th>Подх. × повт.</th><th>RIR</th><th>Отдых</th></tr></thead><tbody>${w.exercises.map(ex => {
+      const sc = bi && ex.scheme ? CFG.schemes[ex.scheme] : null, ph = sc ? phCfg(sc, bi.phase) : null;
+      const sets = sc ? schemeLine(sc, bi.phase) : `${ex.sets} × ${esc(ex.reps)}`;
+      const rir = sc ? (ph?.top ? ph.top[1] : ph?.straight ? ph.straight.rir : "—") : esc(ex.rir);
+      return `<tr><td style="white-space:normal">${esc(ex.name)}${ex.optional ? ' <span class="tag">по желанию</span>' : ""}${ex.hint ? `<span class="hint">${esc(ex.hint)}</span>` : ""}</td><td style="white-space:normal">${sets}</td><td>${rir}</td><td>${esc(ex.rest)}</td></tr>`;
+    }).join("")}</tbody></table></div></div>`;
   });
   v.innerHTML = h;
+}
+function schemeLine(sc, key) {
+  const ph = phCfg(sc, key); if (!ph) return "—";
+  if (ph.straight) return esc(`${ph.straight.n} × ${ph.straight.reps}${ph.straight.pct ? ` (~${Math.round(ph.straight.pct * 100)} %)` : ""}`);
+  if (ph.test) return "1 с запасом 2 → 1 с запасом 1 → попытка";
+  if (ph.amrap) return "1 подход на максимум повторов";
+  let s = `ТС ${ph.top[0]}`;
+  if (ph.bo) s += ` + ${ph.bo.n} × ${ph.bo.cluster ? "(" + ph.bo.cluster + ")" : ph.bo.reps}`;
+  if (ph.singles) s += ` + ${ph.singles.n} × 1`;
+  return esc(s);
+}
+function blockOverview(bi) {
+  const B = CFG.block, lifts = [];
+  CFG.workouts.forEach(w => w.exercises.forEach(ex => { if (ex.scheme) lifts.push(ex); }));
+  const runs = [];
+  B.weekPhase.forEach((k, j) => {
+    const wk = j + 1, dl = B.plannedDeload.includes(wk), last = runs[runs.length - 1];
+    if (last && last.k === k && !dl && !last.dl) last.to = wk; else runs.push({ k, from: wk, to: wk, dl });
+  });
+  const P = profile(), marks = (P.deloadWeeks || []).slice().sort();
+  let h = `<div class="card"><h2>Блок 16 недель</h2>
+    <p class="small muted">Старт ${dShort(bi.start)}.${bi.pre ? "" : ` Сейчас: ${bi.extra ? "внеплановая разгрузка, потом" : ""} неделя ${bi.week}${bi.block > 1 ? `, блок ${bi.block}` : ""}.`}${marks.length ? ` Разгрузочные недели: ${marks.map(dShort).join(", ")}.` : ""} Дату старта можно поменять во вкладке «Аккаунт».</p>`;
+  runs.forEach(r => {
+    const ph = phaseInfo(r.from), now = !bi.pre && bi.week >= r.from && bi.week <= r.to;
+    const wks = r.from === r.to ? `Неделя ${r.from}` : `Недели ${r.from}–${r.to}`;
+    h += `<div class="phase${now ? " now" : ""}"><div class="phase-t">${wks} · ${esc(ph.name)}${now ? ' <span class="tag">сейчас</span>' : ""}</div><div class="small muted">${esc(ph.note)}</div>`;
+    if (!r.dl) h += `<ul class="phase-l">${lifts.map(ex => { const t = schemeLine(CFG.schemes[ex.scheme], r.k); return t === "—" ? "" : `<li><b>${esc(short(ex.name))}:</b> ${t}</li>`; }).join("")}</ul>`;
+    h += `</div>`;
+  });
+  h += `<ul class="rules">${B.legend.map(l => `<li>${esc(l)}</li>`).join("")}</ul></div>`;
+  return h;
 }
 
 /* ---------- routing ---------- */
@@ -732,7 +1037,7 @@ function renderSetup() {
 }
 $("#view-auth").addEventListener("click", e => {
   const b = e.target.closest("[data-prog]"); if (!b) return;
-  Store.write("profile", "me", { program: b.dataset.prog }, false);
+  saveProfile({ program: b.dataset.prog });
   startApp(b.dataset.prog);
 });
 async function afterSignIn() {
@@ -753,7 +1058,7 @@ function startApp(who) {
     sub("daily", snap => { S.daily = new Map(snap.docs.map(d => [d.id, d.data()])); });
     sub("measures", snap => { S.measures = new Map(snap.docs.map(d => [d.id, d.data()])); });
     sub("cardio", snap => { S.cardio = snap.docs.map(d => ({ id: d.id, ...d.data() })); });
-    Store.on("profile", () => { const p = Store.get("profile", "me"); if (p?.program && p.program !== CFG.who) { useProgram(p.program); S.cur = null; render(); } });
+    Store.on("profile", () => { const p = Store.get("profile", "me"); if (p?.program && p.program !== CFG.who) { useProgram(p.program); S.cur = null; } onData(); });
   }
   route(); Sync.show();
 }
@@ -772,7 +1077,7 @@ function renderAccount() {
     <p>${esc(Auth.email)}</p>
     <p class="small muted">Программа: <b>${esc(CFG.name)}</b></p>
     <div class="row">${Object.values(window.PROGRAMS).filter(p => p.who !== CFG.who).map(p => `<button type="button" class="btn" data-switch="${esc(p.who)}">Переключить на программу «${esc(p.name)}»</button>`).join("")}</div>
-  </div>
+  </div>${CFG.block ? blockCard() : ""}
   <div class="card"><h2>Синхронизация</h2>
     <p class="small" id="acc-sync">${esc(syncText())}</p>
     <p class="small muted">Всё, что ты вводишь, сначала сохраняется на устройстве, поэтому в зале можно работать без интернета.</p>
@@ -791,6 +1096,17 @@ function renderAccount() {
   <div class="card"><h2>Выход</h2><p class="small muted">Данные, которые ещё не отправлены, будут потеряны. Сейчас таких: ${Store.pending()}.</p>
     <div class="row"><button type="button" class="btn danger" id="s-out">${S.delArm === "logout" ? "Точно выйти?" : "Выйти"}</button></div></div>`;
 }
+function blockCard() {
+  const bi = blockInfo(today()), P = profile(), dl = (P.deloadWeeks || []).slice().sort();
+  const now = bi.pre ? `Блок начнётся ${dShort(bi.start)}.` : `Сейчас неделя ${bi.week} из ${CFG.block.length} · ${phaseInfo(bi.week).name}${bi.extra ? " (внеплановая разгрузка)" : ""}${bi.block > 1 ? ` · блок ${bi.block}` : ""}.`;
+  return `<div class="card"><h2>Блок тренировок</h2>
+    <p class="small">${esc(now)}</p>
+    <p class="small muted">Неделя без тренировок и внеплановая разгрузочная неделя ставят план на паузу. Разгрузочную неделю включают на вкладке «Тренировка».${dl.length ? " Отмечены: " + dl.map(d => dShort(d) + "–" + dShort(addDays(d, 6))).join(", ") + "." : ""}</p>
+    <div class="row"><div class="field" style="flex:1;min-width:150px"><label class="label" for="b-start">Начало блока</label><input type="date" id="b-start" value="${bi.start}"></div>
+    <button type="button" class="btn primary" id="b-save" style="align-self:flex-end">Сохранить</button></div>
+    <div class="row"><button type="button" class="btn" id="b-new">Начать новый блок с сегодня</button></div>
+    <p class="small" id="b-msg"></p></div>`;
+}
 function importText(text) {
   const j = JSON.parse(text);
   const rows = Array.isArray(j.rows) ? j.rows : [];
@@ -806,6 +1122,10 @@ async function copyOut(text, msgEl, okText) {
 function buildReport() {
   const from = addDays(today(), -28);
   const L = [`Отчёт «Тренировки» · ${CFG.name} · ${dShort(from)}–${dShort(today())}`];
+  if (CFG.block) {
+    const bi = blockInfo(today()), dl = profile().deloadWeeks || [];
+    L.push(bi.pre ? `Блок 16 недель стартует ${dShort(bi.start)}` : `Блок: неделя ${bi.week} из ${CFG.block.length} (${phaseInfo(bi.week).name})${bi.extra ? ", внеплановая разгрузка" : ""}${bi.block > 1 ? `, блок ${bi.block}` : ""}, старт ${dShort(bi.start)}${dl.length ? ", разгрузочные недели с " + dl.map(dShort).join(", ") : ""}`);
+  }
   const rows = weekRows(5).reverse();
   L.push("Недели (с понедельника): вес ср. / ккал / белок / шаги / тренировок / подходов / кардио мин / талия");
   rows.forEach(r => L.push(`${dShort(r.ws)}: ${fmt(r.w, 2)} / ${fmt(r.kcal, 0)} / ${fmt(r.prot, 0)} / ${fmt(r.steps, 0)} / ${r.n} / ${r.sets} / ${r.card || 0} / ${fmt(r.waist)}`));
@@ -813,10 +1133,10 @@ function buildReport() {
   sessionList().filter(x => x.date >= from).reverse().forEach(x => {
     const w = WMAP[x.type];
     const parts = Object.entries(x.sets || {}).map(([name, arr]) => {
-      const ss = arr.filter(q => q && q.r != null).map(q => (q.w != null ? fmtW(q.w) + "×" : "") + q.r + (q.rir != null ? "@" + q.rir : ""));
+      const ss = arr.filter(q => q && q.r != null).map(q => (q.k ? q.k + " " : "") + (q.w != null ? fmtW(q.w) + "×" : "") + q.r + (q.cl ? "(кл.)" : "") + (q.rir != null ? "@" + q.rir : ""));
       return ss.length ? `${name.replace(/\s*\(.*\)/, "")}: ${ss.join(" ")}` : null;
     }).filter(Boolean);
-    L.push(`${dShort(x.date)} ${x.type}${parts.length ? "" : " (без записей)"}`);
+    L.push(`${dShort(x.date)} ${x.type}${x.week ? " · нед. " + x.week : ""}${x.mode && x.mode !== "normal" ? " · " + (MODE_NAME[x.mode] || x.mode) : ""}${parts.length ? "" : " (без записей)"}`);
     parts.forEach(p => L.push("  " + p));
     if (x.notes) L.push("  Заметки: " + x.notes);
   });
@@ -828,7 +1148,13 @@ document.addEventListener("click", async e => {
   if (!$("#view-account") || $("#view-account").hidden) return;
   const t = e.target;
   const sw = t.closest("[data-switch]");
-  if (sw) { Store.write("profile", "me", { program: sw.dataset.switch }, false); useProgram(sw.dataset.switch); S.cur = null; renderAccount(); return; }
+  if (sw) { saveProfile({ program: sw.dataset.switch }); useProgram(sw.dataset.switch); S.cur = null; renderAccount(); return; }
+  if (t.id === "b-save") {
+    const d = $("#b-start").value;
+    if (!d) { $("#b-msg").textContent = "Выбери дату."; return; }
+    saveProfile({ blockStart: d }); S.cur = null; renderAccount(); $("#b-msg").textContent = "Сохранено."; return;
+  }
+  if (t.id === "b-new") { saveProfile({ blockStart: today(), deloadWeeks: [] }); S.cur = null; renderAccount(); $("#b-msg").textContent = "Новый блок начинается сегодня."; return; }
   if (t.id === "s-now") { Sync.run(); return; }
   if (t.id === "s-pick") { $("#file-in").value = ""; $("#file-in").click(); return; }
   if (t.id === "s-import-text") {

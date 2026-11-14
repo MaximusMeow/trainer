@@ -80,12 +80,22 @@ h3 { margin: 0; font-size: 16px; font-weight: 700; text-wrap: balance; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .banner { background: var(--accent-soft); border-radius: var(--r); padding: 10px 12px; font-size: 14px; }
 .banner.warn { background: var(--done-soft); }
+.banner.blk { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.blk-t { font-family: var(--f-display); font-weight: 700; font-size: 18px; letter-spacing: .02em; text-transform: uppercase; line-height: 1.15; }
+.btn.small { padding: 6px 10px; font-size: 13px; }
+.phase { border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.phase.now { border-top-color: var(--accent); }
+.phase-t { font-family: var(--f-display); font-weight: 600; font-size: 17px; }
+.phase-l { margin: 0; padding-left: 18px; font-size: 13px; display: flex; flex-direction: column; gap: 2px; }
 
 /* controls */
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--sunken); padding: 4px; border-radius: var(--r); }
 .seg button { border: 0; background: transparent; padding: 9px 4px; border-radius: 7px; font-family: var(--f-display); font-weight: 600; font-size: 17px; letter-spacing: .02em; color: var(--muted); }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.seg.seg3 { grid-template-columns: repeat(3, 1fr); }
+.seg.seg3 button { font-size: 16px; padding: 7px 4px; }
+.mode-txt { margin: -2px 0 0; }
 .seg button .nx { display: block; font-family: var(--f-body); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
 input, select, textarea {
   background: var(--sunken); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; min-width: 0; width: 100%;
@@ -111,13 +121,19 @@ textarea { min-height: 70px; resize: vertical; }
 .sugg { font-size: 13px; background: var(--accent-soft); border-radius: 6px; padding: 5px 8px; }
 .sugg b { font-family: var(--f-display); font-size: 17px; font-weight: 700; }
 .sets { display: flex; flex-direction: column; gap: 6px; }
-.set { display: grid; grid-template-columns: 26px repeat(3, minmax(0, 1fr)) 48px; gap: 6px; align-items: center; }
-.set.nw { grid-template-columns: 26px repeat(2, minmax(0, 1fr)) 48px; }
+.set { display: grid; grid-template-columns: 30px repeat(3, minmax(0, 1fr)) 48px; gap: 6px; align-items: center; }
+.set.nw { grid-template-columns: 30px repeat(2, minmax(0, 1fr)) 48px; }
 .set .n { font-family: var(--f-display); font-weight: 700; font-size: 18px; color: var(--muted); text-align: center; }
 .set input { text-align: center; font-family: var(--f-display); font-size: 20px; font-weight: 600; padding: 6px 4px; font-variant-numeric: tabular-nums; }
 .set input::placeholder { color: var(--muted); opacity: .55; font-weight: 500; }
-.set-hdr { display: grid; grid-template-columns: 26px repeat(3, minmax(0, 1fr)) 48px; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: center; }
-.set-hdr.nw { grid-template-columns: 26px repeat(2, minmax(0, 1fr)) 48px; }
+.set-hdr { display: grid; grid-template-columns: 30px repeat(3, minmax(0, 1fr)) 48px; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.set-hdr.nw { grid-template-columns: 30px repeat(2, minmax(0, 1fr)) 48px; }
+.set .n.k { font-size: 15px; letter-spacing: .01em; }
+.set.top .n { color: var(--accent); }
+.cl-line { display: flex; justify-content: flex-end; margin-top: -2px; }
+.cl-line .btn { white-space: nowrap; }
+.sugg-src { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 7px; vertical-align: middle; }
 .tick { height: 42px; border-radius: 8px; border: 2px solid var(--line); background: var(--surface); font-size: 20px; font-weight: 700; color: var(--muted); }
 .set.done .tick { background: var(--done); border-color: var(--done); color: #1A1600; }
 .set.done input { background: var(--done-soft); border-color: transparent; }
